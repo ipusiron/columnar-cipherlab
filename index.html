@@ -8,7 +8,10 @@
 </head>
 <body>
   <header class="header">
-    <h1>Columnar CipherLab <span class="sub">– 縦列転置式暗号（Columnar Transposition）で暗号化・復号するWebツールです</span></h1>
+    <div class="header-content">
+      <h1>Columnar CipherLab</h1>
+      <p class="header-subtitle">縦列転置式暗号（Columnar Transposition）で暗号化・復号するWebツール</p>
+    </div>
   </header>
 
   <main class="container">
@@ -17,120 +20,259 @@
       <button class="tab-button" data-tab="dec">復号</button>
       <button class="tab-button" data-tab="double">二重転置（未実装）</button>
       <button class="tab-button" data-tab="variants">派生形（未実装）</button>
+      <button class="tab-button" data-tab="study">座学</button>
     </div>
 
     <!-- 暗号化タブ -->
     <section id="tab-enc" class="tab-content active">
-      <div class="card grid-2">
-        <div>
-          <h2>入力</h2>
-          <textarea id="enc-plain" class="mono" rows="6" placeholder="平文を入力"></textarea>
+      <div class="card">
+        <!-- 入力エリア -->
+        <div class="section">
+          <div class="section-header">
+            <h2>1. 平文入力</h2>
+            <div class="sample-buttons">
+              <div class="sample-dropdown">
+                <button id="enc-sample" class="sample-btn">サンプル設定 ▼</button>
+                <div id="enc-sample-menu" class="sample-menu hidden">
+                  <button class="sample-option" data-preset="1">①マザーグース</button>
+                  <button class="sample-option" data-preset="2">②ZEBRAS</button>
+                  <button class="sample-option" data-preset="3">③数列</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <textarea id="enc-plain" class="mono" rows="4" placeholder="平文を入力"></textarea>
+        </div>
 
-          <div class="fieldset">
-            <div class="field">
-              <label class="lbl">鍵タイプ</label>
-              <label><input type="radio" name="enc-keytype" value="keyword" checked> キーワード</label>
-              <label><input type="radio" name="enc-keytype" value="numeric"> 数列</label>
-            </div>
-            <div class="field key-row" id="enc-keyword-row">
-              <label class="lbl">キーワード</label>
-              <input id="enc-keyword" type="text" placeholder="例：ZEBRAS / BALLOON" />
-            </div>
-            <div class="field key-row hidden" id="enc-numeric-row">
-              <label class="lbl">鍵数列</label>
-              <input id="enc-numeric" type="text" placeholder="例：3 1 4 2 / 3,1,4,2 / 3142" />
+        <!-- 設定エリア -->
+        <div class="section">
+          <h2>2. 暗号化設定</h2>
+          <div class="settings-grid">
+            <div class="setting-group">
+              <h3>鍵の設定</h3>
+              <div class="field">
+                <label class="lbl">鍵の使用</label>
+                <label><input type="checkbox" id="enc-use-key" checked> 鍵を使用する</label>
+                <span class="input-hint">※チェックを外すと鍵なし（列の並べ替えなし）で暗号化</span>
+              </div>
+              <div id="enc-key-settings">
+                <div class="field">
+                  <label class="lbl">鍵タイプ</label>
+                  <label><input type="radio" name="enc-keytype" value="keyword" checked> キーワード</label>
+                  <label><input type="radio" name="enc-keytype" value="numeric"> 数列</label>
+                </div>
+                <div class="field key-row" id="enc-keyword-row">
+                  <label class="lbl">キーワード</label>
+                  <input id="enc-keyword" type="text" value="" placeholder="例：ZEBRAS / BALLOON" />
+                  <span class="input-hint">※半角の英字列（英単語等）、同一アルファベットがあれば左側を若い数値に割り当て</span>
+                </div>
+                <div class="field key-row hidden" id="enc-numeric-row">
+                  <label class="lbl">鍵数列</label>
+                  <input id="enc-numeric" type="text" value="" placeholder="1から始まる連続数値を入力 (例: 3 1 4 2 5)" />
+                  <span class="input-hint">※重複不可、1から始まる数列を推奨</span>
+                </div>
+              </div>
+              <div class="field" id="enc-no-key-settings" style="display: none;">
+                <label class="lbl">列数</label>
+                <input id="enc-col-num" type="number" min="2" max="20" value="5" class="w4" />
+                <span class="input-hint">※2～20の範囲で指定</span>
+              </div>
             </div>
 
-            <div class="field">
-              <label class="lbl">モード</label>
-              <label><input type="checkbox" id="enc-complete" checked> 完全（パディングで長方形化）</label>
-              <label class="pad">
-                パディング：<input id="enc-padchar" type="text" value="X" maxlength="1" class="w4" />
-              </label>
-            </div>
-
-            <div class="field">
-              <label class="lbl">整形</label>
-              <label><input type="checkbox" id="enc-stripspace" checked> スペース削除</label>
-              <label><input type="checkbox" id="enc-uppercase" checked> 英大文字化</label>
+            <div class="setting-group">
+              <h3>モードと整形</h3>
+              <div class="field">
+                <label class="lbl">モード</label>
+                <label><input type="checkbox" id="enc-complete" checked> 完全（パディングで長方形化）</label>
+              </div>
+              <div class="field" id="enc-padding-row">
+                <label class="lbl">埋字（パディング）</label>
+                <input id="enc-padchar" type="text" value="X" maxlength="1" class="w1" />
+                <span class="input-hint">※英字1文字のみ</span>
+              </div>
+              <div class="field">
+                <label class="lbl">整形</label>
+                <label><input type="checkbox" id="enc-stripspace" checked> スペース削除</label>
+                <label><input type="checkbox" id="enc-stripsymbol" checked> 記号削除</label>
+                <label><input type="checkbox" id="enc-uppercase" checked> 英大文字化</label>
+              </div>
             </div>
           </div>
 
           <div class="buttons">
-            <button id="enc-run" class="primary">暗号化</button>
-            <button id="enc-sample" class="secondary">サンプル</button>
+            <button id="enc-run" class="primary">暗号化実行</button>
             <button id="enc-clear" class="ghost">クリア</button>
           </div>
-
           <div id="enc-error" class="error hidden"></div>
+        </div>
 
-          <h2>暗号文</h2>
-          <div class="output-wrapper">
-            <textarea id="enc-cipher" class="mono" rows="4" readonly></textarea>
-            <button id="enc-copy" class="copy-btn" title="コピー">📋</button>
+        <!-- 中間状態表示エリア -->
+        <div class="section" id="enc-intermediate-section" style="display: none;">
+          <h2>3. 整形後の平文</h2>
+          <div class="intermediate-display">
+            <code id="enc-formatted-text" class="mono formatted-text"></code>
+            <div class="text-info">
+              文字数: <span id="enc-char-count">0</span> / 
+              列数: <span id="enc-col-count">0</span> / 
+              行数: <span id="enc-row-count">0</span>
+            </div>
           </div>
         </div>
 
-        <div>
-          <h2>可視化</h2>
+        <!-- 可視化エリア -->
+        <div class="section" id="enc-visual-section" style="display: none;">
+          <h2>4. 暗号化マトリクス</h2>
           <div class="key-visual">
             <div>列順（小さい順に読み出し）：<span id="enc-order"></span></div>
           </div>
+          
+          <h3>元のマトリクス（書き込み順）</h3>
+          <div class="matrix-legend">
+            <span class="legend-item"><span class="legend-sample plaintext">A</span>平文文字</span>
+            <span class="legend-item"><span class="legend-sample pad">X</span>埋字</span>
+            <span class="legend-item"><span class="legend-sample empty">·</span>空セル</span>
+          </div>
           <div id="enc-grid" class="gridwrap"></div>
+          
+          <div class="matrix-control">
+            <button id="enc-reorder" class="secondary">鍵順に並び替え</button>
+          </div>
+          
+          <div id="enc-reordered-section" style="display: none;">
+            <h3>並び替え後マトリクス（読み出し順）</h3>
+            <div class="matrix-legend">
+              <span class="legend-item"><span class="legend-sample plaintext">A</span>平文文字</span>
+              <span class="legend-item"><span class="legend-sample pad">X</span>埋字</span>
+              <span class="legend-item"><span class="legend-sample empty">·</span>空セル</span>
+            </div>
+            <div id="enc-reordered-grid" class="gridwrap"></div>
+          </div>
+        </div>
+
+        <!-- 暗号文エリア -->
+        <div class="section" id="enc-result-section" style="display: none;">
+          <h2>5. 暗号文</h2>
+          
+          <!-- ハイライト表示 -->
+          <div class="subsection">
+            <h3>ハイライト表示</h3>
+            <div class="output-wrapper">
+              <div id="enc-cipher-display" class="cipher-display"></div>
+            </div>
+          </div>
+          
+          <!-- テキスト出力 -->
+          <div class="subsection">
+            <h3>テキスト出力</h3>
+            <div class="output-wrapper">
+              <textarea id="enc-cipher" class="mono" rows="4" readonly></textarea>
+              <button id="enc-copy" class="copy-btn" title="コピー">📋</button>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
     <!-- 復号タブ -->
     <section id="tab-dec" class="tab-content">
-      <div class="card grid-2">
-        <div>
-          <h2>入力</h2>
-          <textarea id="dec-cipher" class="mono" rows="6" placeholder="暗号文を入力"></textarea>
+      <div class="card">
+        <!-- 入力エリア -->
+        <div class="section">
+          <h2>1. 暗号文入力</h2>
+          <textarea id="dec-cipher" class="mono" rows="4" placeholder="暗号文を入力"></textarea>
+        </div>
 
-          <div class="fieldset">
-            <div class="field">
-              <label class="lbl">鍵タイプ</label>
-              <label><input type="radio" name="dec-keytype" value="keyword" checked> キーワード</label>
-              <label><input type="radio" name="dec-keytype" value="numeric"> 数列</label>
-            </div>
-            <div class="field key-row" id="dec-keyword-row">
-              <label class="lbl">キーワード</label>
-              <input id="dec-keyword" type="text" placeholder="例：ZEBRAS / BALLOON" />
-            </div>
-            <div class="field key-row hidden" id="dec-numeric-row">
-              <label class="lbl">鍵数列</label>
-              <input id="dec-numeric" type="text" placeholder="例：3 1 4 2 / 3,1,4,2 / 3142" />
+        <!-- 設定エリア -->
+        <div class="section">
+          <h2>2. 復号設定</h2>
+          <div class="settings-grid">
+            <div class="setting-group">
+              <h3>鍵の設定</h3>
+              <div class="field">
+                <label class="lbl">鍵の使用</label>
+                <label><input type="checkbox" id="dec-use-key" checked> 鍵を使用する</label>
+                <span class="input-hint">※チェックを外すと鍵なし（列の並べ替えなし）で復号</span>
+              </div>
+              <div id="dec-key-settings">
+                <div class="field">
+                  <label class="lbl">鍵タイプ</label>
+                  <label><input type="radio" name="dec-keytype" value="keyword" checked> キーワード</label>
+                  <label><input type="radio" name="dec-keytype" value="numeric"> 数列</label>
+                </div>
+                <div class="field key-row" id="dec-keyword-row">
+                  <label class="lbl">キーワード</label>
+                  <input id="dec-keyword" type="text" value="" placeholder="例：ZEBRAS / BALLOON" />
+                  <span class="input-hint">※半角の英字列（英単語等）、同一アルファベットがあれば左側を若い数値に割り当て</span>
+                </div>
+                <div class="field key-row hidden" id="dec-numeric-row">
+                  <label class="lbl">鍵数列</label>
+                  <input id="dec-numeric" type="text" value="" placeholder="1から始まる連続数値を入力 (例: 3 1 4 2 5)" />
+                  <span class="input-hint">※重複不可、1から始まる数列を推奨</span>
+                </div>
+              </div>
+              <div class="field" id="dec-no-key-settings" style="display: none;">
+                <label class="lbl">列数</label>
+                <input id="dec-col-num" type="number" min="2" max="20" value="5" class="w4" />
+                <span class="input-hint">※2～20の範囲で指定</span>
+              </div>
             </div>
 
-            <div class="field">
-              <label class="lbl">モード</label>
-              <label><input type="checkbox" id="dec-complete" checked> 完全（長方形）</label>
-              <label><input type="checkbox" id="dec-autostrip" checked> パディング自動除去</label>
-              <label class="pad">パディング：<input id="dec-padchar" type="text" value="X" maxlength="1" class="w4" /></label>
+            <div class="setting-group">
+              <h3>モード設定</h3>
+              <div class="field">
+                <label class="lbl">モード</label>
+                <label><input type="checkbox" id="dec-complete" checked> 完全（長方形）</label>
+              </div>
+              <div class="field" id="dec-padding-row">
+                <label class="lbl">埋字（パディング）</label>
+                <input id="dec-padchar" type="text" value="X" maxlength="1" class="w1" />
+                <label style="margin-left: 8px;"><input type="checkbox" id="dec-autostrip" checked> 自動除去</label>
+                <span class="input-hint">※英字1文字のみ</span>
+              </div>
             </div>
           </div>
 
           <div class="buttons">
-            <button id="dec-run" class="primary">復号</button>
+            <button id="dec-run" class="primary">復号実行</button>
             <button id="dec-clear" class="ghost">クリア</button>
           </div>
-
           <div id="dec-error" class="error hidden"></div>
-
-          <h2>復号結果</h2>
-          <div class="output-wrapper">
-            <textarea id="dec-plain" class="mono" rows="4" readonly></textarea>
-            <button id="dec-copy" class="copy-btn" title="コピー">📋</button>
-          </div>
         </div>
 
-        <div>
-          <h2>可視化</h2>
+        <!-- 可視化エリア -->
+        <div class="section" id="dec-visual-section" style="display: none;">
+          <h2>3. 復号マトリクス</h2>
           <div class="key-visual">
             <div>列順（小さい順に読み込み）：<span id="dec-order"></span></div>
           </div>
+          <div class="matrix-legend">
+            <span class="legend-item"><span class="legend-sample plaintext">A</span>復号文字</span>
+            <span class="legend-item"><span class="legend-sample pad">X</span>埋字</span>
+            <span class="legend-item"><span class="legend-sample empty">·</span>空セル</span>
+          </div>
           <div id="dec-grid" class="gridwrap"></div>
+        </div>
+
+        <!-- 復号結果エリア -->
+        <div class="section" id="dec-result-section" style="display: none;">
+          <h2>4. 復号結果</h2>
+          
+          <!-- ハイライト表示 -->
+          <div class="subsection">
+            <h3>ハイライト表示</h3>
+            <div class="output-wrapper">
+              <div id="dec-plain-display" class="cipher-display"></div>
+            </div>
+          </div>
+          
+          <!-- テキスト出力 -->
+          <div class="subsection">
+            <h3>テキスト出力</h3>
+            <div class="output-wrapper">
+              <textarea id="dec-plain" class="mono" rows="4" readonly></textarea>
+              <button id="dec-copy" class="copy-btn" title="コピー">📋</button>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -150,14 +292,262 @@
         <p>斜め書き出し、らせん書き出し、開始位置の工夫などの派生を追加予定です。</p>
       </div>
     </section>
+
+    <!-- 座学タブ -->
+    <section id="tab-study" class="tab-content">
+      <div class="card">
+        <h2>📚 縦列転置式暗号とは</h2>
+        <div class="study-content">
+          <section class="study-section">
+            <h3>基本原理</h3>
+            <p>縦列転置式暗号（Columnar Transposition Cipher）は、平文の文字の順序を体系的に並べ替える<strong>転置式暗号</strong>の一種です。</p>
+            <ul>
+              <li>平文を<strong>横方向（行方向）</strong>にマトリクスへ書き込む</li>
+              <li>鍵に基づいて<strong>列を並べ替える</strong></li>
+              <li><strong>縦方向（列方向）</strong>に読み出して暗号文を生成</li>
+            </ul>
+            <div class="example-box">
+              <h4>例：キーワード "KEY" での暗号化</h4>
+              <pre class="mono">平文: HELLO WORLD
+鍵順: K=2, E=1, Y=3
+
+マトリクス（書き込み）:
+  K E Y
+  2 1 3
+  -------
+  H E L
+  L O W
+  O R L
+  D X X  (Xはパディング)
+
+列の並べ替え（鍵順で）:
+  E K Y
+  1 2 3
+  -------
+  E H L
+  O L W
+  R O L
+  X D X
+
+暗号文（縦読み）: EORX HLOD LWLX</pre>
+            </div>
+          </section>
+
+          <section class="study-section">
+            <h3>暗号の種類と特徴</h3>
+            <div class="feature-grid">
+              <div class="feature-card">
+                <h4>①完全／不完全</h4>
+                <p><strong>完全モード：</strong>パディング文字で長方形にする</p>
+                <p><strong>不完全モード：</strong>最終行が欠けたまま処理</p>
+              </div>
+              <div class="feature-card">
+                <h4>②鍵の種類</h4>
+                <p><strong>キーワード：</strong>単語をアルファベット順で数値化</p>
+                <p><strong>数列：</strong>直接数値で列順を指定（例: 3,1,4,2）</p>
+              </div>
+              <div class="feature-card">
+                <h4>③二重転置</h4>
+                <p><strong>縦→縦：</strong>2回縦列転置を適用</p>
+                <p><strong>縦→横：</strong>縦列転置後、横行転置（ニヒリスト式）</p>
+              </div>
+              <div class="feature-card">
+                <h4>④派生形</h4>
+                <p><strong>斜め読み出し：</strong>対角線方向に読む</p>
+                <p><strong>らせん読み出し：</strong>渦巻き状に読む</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="study-section">
+            <h3>歴史と背景</h3>
+            <div class="history-timeline">
+              <div class="timeline-item">
+                <h4>古代〜中世</h4>
+                <p>スパルタのスキュタレー暗号など、初期の転置式暗号が登場。巻物を棒に巻きつけて文字を読む方式。</p>
+              </div>
+              <div class="timeline-item">
+                <h4>1880年頃 - ニヒリスト式</h4>
+                <p>帝政ロシアの革命家ニヒリストたちが使用。獄中のミハイロフが二重転置（縦×横）を考案。秘密警察に解読されるも、暗号史に名を残す。</p>
+              </div>
+              <div class="timeline-item">
+                <h4>第一次世界大戦</h4>
+                <p>軍事通信で広く使用。ドイツ軍のUBCHI暗号など、複雑な鍵管理を伴う転置式暗号が発展。</p>
+              </div>
+              <div class="timeline-item">
+                <h4>第二次世界大戦</h4>
+                <p>機械式暗号機（エニグマ等）が主流になるも、簡易暗号として継続使用。特に野戦部隊で重宝される。</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="study-section">
+            <h3>暗号学的特性</h3>
+            <div class="crypto-properties">
+              <h4>セキュリティ分析</h4>
+              <ul>
+                <li><strong>拡散（Diffusion）：</strong>文字の位置を分散させる効果あり</li>
+                <li><strong>混同（Confusion）：</strong>なし（文字の置換は行わない）</li>
+                <li><strong>頻度分析への耐性：</strong>弱い（文字頻度は保存される）</li>
+              </ul>
+              
+              <h4>攻撃手法</h4>
+              <ul>
+                <li><strong>総当たり攻撃：</strong>鍵長nに対してn!通りの組み合わせ</li>
+                <li><strong>頻度分析：</strong>言語の文字頻度パターンから推測</li>
+                <li><strong>アナグラム攻撃：</strong>部分的な単語を復元して鍵を推定</li>
+              </ul>
+
+              <div class="warning-box">
+                <strong>⚠️ 現代での使用について</strong>
+                <p>縦列転置式暗号は教育目的や暗号学の基礎理解には優れていますが、現代のセキュリティ要件を満たしません。実用的な暗号化にはAESなどの現代暗号を使用してください。</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="study-section">
+            <h3>他の古典暗号との比較</h3>
+            <table class="comparison-table">
+              <thead>
+                <tr>
+                  <th>暗号方式</th>
+                  <th>種類</th>
+                  <th>操作</th>
+                  <th>特徴</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>縦列転置式</strong></td>
+                  <td>転置</td>
+                  <td>文字の並べ替え</td>
+                  <td>文字頻度は保存される</td>
+                </tr>
+                <tr>
+                  <td>シーザー暗号</td>
+                  <td>換字</td>
+                  <td>文字のシフト</td>
+                  <td>単純な頻度分析で破れる</td>
+                </tr>
+                <tr>
+                  <td>ヴィジュネル暗号</td>
+                  <td>換字</td>
+                  <td>複数のシフト</td>
+                  <td>多表式で頻度分析に強い</td>
+                </tr>
+                <tr>
+                  <td>レールフェンス暗号</td>
+                  <td>転置</td>
+                  <td>ジグザグ配置</td>
+                  <td>鍵なし転置の一種</td>
+                </tr>
+                <tr>
+                  <td>プレイフェア暗号</td>
+                  <td>換字</td>
+                  <td>2文字組の置換</td>
+                  <td>頻度分析への耐性向上</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section class="study-section">
+            <h3>実装のポイント</h3>
+            <div class="implementation-tips">
+              <h4>暗号化アルゴリズム</h4>
+              <ol>
+                <li>平文の前処理（スペース除去、大文字化など）</li>
+                <li>鍵から列順序を決定（キーワード→数値変換）</li>
+                <li>マトリクスへの行方向書き込み</li>
+                <li>必要に応じてパディング追加</li>
+                <li>鍵順での列の並べ替え</li>
+                <li>列方向での読み出し</li>
+              </ol>
+
+              <h4>復号アルゴリズム</h4>
+              <ol>
+                <li>暗号文の長さと鍵から行数を計算</li>
+                <li>各列の高さを決定（不完全モードでは注意）</li>
+                <li>鍵順に従って暗号文を列に配分</li>
+                <li>元の列順序に戻す</li>
+                <li>行方向で読み出して平文を復元</li>
+                <li>パディングの除去（完全モードの場合）</li>
+              </ol>
+            </div>
+          </section>
+
+          <section class="study-section">
+            <h3>練習問題</h3>
+            <div class="exercise-box">
+              <h4>問題1：基本的な暗号化</h4>
+              <p>平文 "MEET ME AFTER" をキーワード "CAT" で暗号化してみましょう。</p>
+              <details>
+                <summary>解答を見る</summary>
+                <pre class="mono">キーワード: CAT → C=2, A=1, T=3
+マトリクス:
+  C A T
+  2 1 3
+  -----
+  M E E
+  T M E
+  A F T
+  E R X
+
+並べ替え後（A,C,T順）:
+  A C T
+  1 2 3
+  -----
+  E M E
+  M T E
+  F A T
+  R E X
+
+暗号文: EMFR MTAE EETX</pre>
+              </details>
+            </div>
+
+            <div class="exercise-box">
+              <h4>問題2：不完全モードの復号</h4>
+              <p>暗号文 "EOIE SRMN VDC" を数列 "2,1,3" で復号してみましょう（不完全モード）。</p>
+              <details>
+                <summary>解答を見る</summary>
+                <pre class="mono">暗号文長: 10文字、鍵長: 3
+行数: ceil(10/3) = 4行
+列の高さ: [4,3,3]（最初の1列のみ4行）
+
+配分:
+列1(順2): EOIE (4文字)
+列0(順1): SRM (3文字)
+列2(順3): VDC (3文字)
+
+元の順序に戻す:
+  0 1 2
+  -----
+  S E V
+  R O D
+  M I C
+  - E -
+
+平文: SERVED MICE</pre>
+              </details>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer>
     <div class="footer">
-      🔗 GitHubリポジトリはこちら（ <a href="https://github.com/ipusiron/columnar-cipherlab" target="_blank">ipusiron/columnar-cipherlab</a> ）
+      <div class="footer-line">
+        🔗 GitHubリポジトリ: <a href="https://github.com/ipusiron/columnar-cipherlab" target="_blank">ipusiron/columnar-cipherlab</a>
+      </div>
+      <div class="footer-line">
+        📚 生成AIで作るセキュリティツール100 - Day043
+      </div>
     </div>
   </footer>
 
-  <script src="script.js"></script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
