@@ -7,10 +7,17 @@ import {
   buildGridByRows, 
   renderGrid, 
   showOrderBadges, 
-  copyToClipboard 
+  copyToClipboard,
+  escapeHtml
 } from './utils.js';
+import { loadPresets, getPresetById } from './presets.js';
 
 export function initEncryption() {
+  window.debugLog('ENCRYPT', '🔧 Initializing encryption module...');
+  
+  // プリセットを読み込んでUIを初期化
+  initializePresetUI();
+  
   // DOM要素の取得
   const encKeyTypeInputs = document.querySelectorAll('input[name="enc-keytype"]');
   const encKeywordRow = document.getElementById('enc-keyword-row');
@@ -58,6 +65,18 @@ export function initEncryption() {
   let currentPadChar = null;
   let currentCipher = null;
 
+  // 暗号化状態をグローバルに保存（復号タブからアクセス可能）
+  window.encryptionState = {
+    cipher: null,
+    keyType: null,
+    keyword: null,
+    numeric: null,
+    useKey: true,
+    complete: true,
+    padChar: 'X',
+    colNum: 5
+  };
+
   // 列ハイライト機能
   function setupColumnHighlight() {
     if (!currentCipher || !currentKeyInfo) return;
@@ -90,7 +109,7 @@ export function initEncryption() {
     let highlightHtml = '';
     cipherSegments.forEach((seg, index) => {
       for (let i = 0; i < seg.segment.length; i++) {
-        highlightHtml += `<span class="cipher-char" data-column="${index}" data-pos="${seg.startPos + i}">${seg.segment[i]}</span>`;
+        highlightHtml += `<span class="cipher-char" data-column="${escapeHtml(index)}" data-pos="${escapeHtml(seg.startPos + i)}">${escapeHtml(seg.segment[i])}</span>`;
       }
     });
     encCipherDisplay.innerHTML = highlightHtml;
@@ -106,36 +125,34 @@ export function initEncryption() {
     // マトリクス列のハイライト
     const table = encReorderedGrid.querySelector('table');
     if (table) {
-      // 既存のハイライトをクリア
-      table.querySelectorAll('.column-highlight').forEach(cell => {
+      // 既存のハイライトとインラインスタイルをクリア
+      table.querySelectorAll('th, td').forEach(cell => {
         cell.classList.remove('column-highlight');
+        cell.style.backgroundColor = ''; // インラインスタイルもクリア
       });
       
       // 指定された列をハイライト
       if (columnIndex !== -1) {
-        // ヘッダー
-        const headerCell = table.querySelector(`th:nth-child(${columnIndex + 2})`); // +2 for row header
-        if (headerCell) {
-          headerCell.classList.add('column-highlight');
-        }
-        
-        // データセル
-        const dataCells = table.querySelectorAll(`td:nth-child(${columnIndex + 2})`);
-        dataCells.forEach(cell => {
+        // すべてのヘッダー行（#行と鍵順行）とデータセルをハイライト
+        const allCells = table.querySelectorAll(`th:nth-child(${columnIndex + 2}), td:nth-child(${columnIndex + 2})`);
+        allCells.forEach(cell => {
           cell.classList.add('column-highlight');
+          cell.style.backgroundColor = ''; // インラインスタイルをクリアして、クラスのスタイルのみ適用
         });
       }
     }
     
-    // 暗号文のハイライト
+    // 暗号文のハイライトとインラインスタイルをクリア
     encCipherDisplay.querySelectorAll('.cipher-char').forEach(char => {
       char.classList.remove('highlighted');
+      char.style.backgroundColor = ''; // インラインスタイルもクリア
     });
     
     if (columnIndex !== -1) {
       const cipherChars = encCipherDisplay.querySelectorAll(`[data-column="${columnIndex}"]`);
       cipherChars.forEach(char => {
         char.classList.add('highlighted');
+        char.style.backgroundColor = ''; // インラインスタイルをクリアして、クラスのスタイルのみ適用
       });
     }
   }
@@ -151,6 +168,8 @@ export function initEncryption() {
     // 鍵を使用する場合の検証
     if (useKey) {
       const keyType = document.querySelector('input[name="enc-keytype"]:checked').value;
+      
+      // 現在選択されているキータイプの検証
       if (keyType === 'keyword') {
         const keyword = encKeyword.value.trim();
         if (keyword.length === 0) {
@@ -164,6 +183,12 @@ export function initEncryption() {
           hasKey = false;
           isValid = false;
           errorMessages.push('キーワードは2文字以上にしてください。');
+        }
+        
+        // 数列フィールドにも入力がある場合は警告
+        const numericStr = encNumeric.value.trim();
+        if (numericStr.length > 0) {
+          errorMessages.push('数列フィールドに入力がありますが、キーワードが選択されています。数列フィールドをクリアするか、数列モードに切り替えてください。');
         }
       } else {
         const numericStr = encNumeric.value.trim();
@@ -215,6 +240,12 @@ export function initEncryption() {
             }
           }
         }
+        
+        // キーワードフィールドにも入力がある場合は警告
+        const keyword = encKeyword.value.trim();
+        if (keyword.length > 0) {
+          errorMessages.push('キーワードフィールドに入力がありますが、数列が選択されています。キーワードフィールドをクリアするか、キーワードモードに切り替えてください。');
+        }
       }
     } else {
       // 鍵なしの場合は列数をチェック
@@ -239,7 +270,7 @@ export function initEncryption() {
     
     // エラーメッセージの表示/非表示
     if (errorMessages.length > 0) {
-      encError.innerHTML = errorMessages.map(msg => `• ${msg}`).join('<br>');
+      encError.innerHTML = errorMessages.map(msg => `• ${escapeHtml(msg)}`).join('<br>');
       encError.classList.remove('hidden');
     } else {
       encError.classList.add('hidden');
@@ -282,6 +313,16 @@ export function initEncryption() {
   updateEncryptButtonState();
   updatePaddingRowVisibility();
   updateKeySettingsVisibility();
+  
+  // 初期状態で鍵タイプ切り替えを実行（確実に設定）
+  const initialKeyType = document.querySelector('input[name="enc-keytype"]:checked').value;
+  if (initialKeyType === 'keyword') {
+    encKeywordRow.classList.remove('hidden');
+    encNumericRow.classList.add('hidden');
+  } else {
+    encKeywordRow.classList.add('hidden');
+    encNumericRow.classList.remove('hidden');
+  }
 
   // 鍵の使用チェックボックス変更を監視
   encUseKey.addEventListener('change', updateKeySettingsVisibility);
@@ -289,8 +330,13 @@ export function initEncryption() {
   // 鍵タイプの切替
   encKeyTypeInputs.forEach(r => r.addEventListener('change', () => {
     const v = document.querySelector('input[name="enc-keytype"]:checked').value;
-    encKeywordRow.classList.toggle('hidden', v !== 'keyword');
-    encNumericRow.classList.toggle('hidden', v !== 'numeric');
+    if (v === 'keyword') {
+      encKeywordRow.classList.remove('hidden');
+      encNumericRow.classList.add('hidden');
+    } else {
+      encKeywordRow.classList.add('hidden');
+      encNumericRow.classList.remove('hidden');
+    }
     updateEncryptButtonState(); // 鍵タイプ変更時も状態を更新
   }));
 
@@ -305,41 +351,59 @@ export function initEncryption() {
   encComplete.addEventListener('change', updatePaddingRowVisibility);
 
   // サンプル設定を適用する関数
-  function applySamplePreset(presetNumber) {
-    switch(presetNumber) {
-      case '1': // マザーグース
-        encPlain.value = 'Who killed Cock Robin? I, said the Sparrow,';
-        encKeyword.value = 'MOTHER';
+  async function applySamplePreset(presetId) {
+    try {
+      window.debugLog('ENCRYPT', `📋 Applying preset: ${presetId}`);
+      
+      const preset = await getPresetById(presetId);
+      if (!preset) {
+        throw new Error(`Preset with id "${presetId}" not found`);
+      }
+      
+      window.debugLog('ENCRYPT', `📝 Loaded preset: ${preset.name}`, preset);
+      
+      // 平文を設定
+      encPlain.value = preset.plaintext;
+      
+      // 鍵タイプに応じて設定
+      if (preset.keyType === 'keyword') {
+        encKeyword.value = preset.keyword || '';
+        encNumeric.value = '';
         document.querySelector('input[name="enc-keytype"][value="keyword"]').checked = true;
         encKeywordRow.classList.remove('hidden');
         encNumericRow.classList.add('hidden');
-        break;
-      case '2': // ZEBRAS
-        encPlain.value = 'WE ARE DISCOVERED FLEE AT ONCE';
-        encKeyword.value = 'ZEBRAS';
-        document.querySelector('input[name="enc-keytype"][value="keyword"]').checked = true;
-        encKeywordRow.classList.remove('hidden');
-        encNumericRow.classList.add('hidden');
-        break;
-      case '3': // 数列
-        encPlain.value = 'ATTACK AT DAWN';
-        encNumeric.value = '3 1 4 2 5';
+      } else if (preset.keyType === 'numeric') {
+        encNumeric.value = preset.numeric || '';
+        encKeyword.value = '';
         document.querySelector('input[name="enc-keytype"][value="numeric"]').checked = true;
         encKeywordRow.classList.add('hidden');
         encNumericRow.classList.remove('hidden');
-        break;
+      }
+      
+      // 設定を適用
+      const settings = preset.settings;
+      encUseKey.checked = settings.useKey;
+      encComplete.checked = settings.complete;
+      encPadChar.value = settings.padChar || 'X';
+      encStrip.checked = settings.stripSpace;
+      encStripSymbol.checked = settings.stripSymbol;
+      encUpper.checked = settings.uppercase;
+      
+      if (settings.colNum && !settings.useKey) {
+        encColNum.value = settings.colNum;
+      }
+      
+      // 表示を更新
+      updateKeySettingsVisibility();
+      updatePaddingRowVisibility();
+      updateEncryptButtonState();
+      
+      window.debugLog('ENCRYPT', `✅ Preset "${preset.name}" applied successfully`);
+      
+    } catch (error) {
+      window.debugLog('ENCRYPT', `❌ Failed to apply preset: ${error.message}`);
+      console.error('Failed to apply preset:', error);
     }
-    
-    // 共通設定
-    encUseKey.checked = true;
-    encKeySettings.style.display = 'block';
-    encNoKeySettings.style.display = 'none';
-    encComplete.checked = true;
-    encPadChar.value = 'X';
-    encStrip.checked = true;
-    encStripSymbol.checked = true;
-    encUpper.checked = true;
-    updateEncryptButtonState();
   }
 
   // サンプルドロップダウンの制御
@@ -348,15 +412,8 @@ export function initEncryption() {
     encSampleMenu.classList.toggle('hidden');
   });
 
-  // サンプルオプションの選択
-  encSampleOptions.forEach(option => {
-    option.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const preset = option.dataset.preset;
-      applySamplePreset(preset);
-      encSampleMenu.classList.add('hidden');
-    });
-  });
+  // 注意: サンプルオプションは動的に生成されるため、
+  // イベントリスナーは initializePresetUI() で設定される
 
   // ドロップダウン外クリックで閉じる
   document.addEventListener('click', () => {
@@ -365,10 +422,18 @@ export function initEncryption() {
 
   // ハイライトをクリアする関数
   function clearHighlight() {
-    // マトリクス列のハイライトをクリア
+    // 並び替え後マトリクス列のハイライトをクリア
     const table = encReorderedGrid.querySelector('table');
     if (table) {
       table.querySelectorAll('.column-highlight').forEach(cell => {
+        cell.classList.remove('column-highlight');
+      });
+    }
+    
+    // 元のマトリクス列のハイライトをクリア
+    const originalTable = encGridDiv.querySelector('table');
+    if (originalTable) {
+      originalTable.querySelectorAll('.column-highlight').forEach(cell => {
         cell.classList.remove('column-highlight');
       });
     }
@@ -379,10 +444,73 @@ export function initEncryption() {
     });
   }
 
+  // 元のマトリクスのホバー機能を設定
+  function setupOriginalMatrixHover() {
+    const originalTable = encGridDiv.querySelector('table');
+    if (!originalTable || !currentKeyInfo) return;
+    
+    const numColumns = originalTable.querySelectorAll('th').length - 1; // 行番号列を除く
+    
+    for (let originalColIndex = 0; originalColIndex < numColumns; originalColIndex++) {
+      const columnCells = originalTable.querySelectorAll(`th:nth-child(${originalColIndex + 2}), td:nth-child(${originalColIndex + 2})`);
+      
+      columnCells.forEach(cell => {
+        cell.addEventListener('mouseenter', () => {
+          // 元のマトリクスの列をハイライト
+          columnCells.forEach(c => {
+            if (!c.classList.contains('column-highlight')) {
+              c.style.backgroundColor = 'rgba(0, 123, 255, 0.3)';
+            }
+          });
+          
+          // 並び替え後マトリクスが表示されている場合、対応する列もハイライト
+          const reorderedTable = encReorderedGrid.querySelector('table');
+          if (reorderedTable) {
+            // 元の列インデックスから並び替え後の位置を見つける
+            const reorderedPosition = currentKeyInfo.order.indexOf(originalColIndex);
+            if (reorderedPosition !== -1) {
+              const reorderedColumnCells = reorderedTable.querySelectorAll(`th:nth-child(${reorderedPosition + 2}), td:nth-child(${reorderedPosition + 2})`);
+              reorderedColumnCells.forEach(c => {
+                if (!c.classList.contains('column-highlight')) {
+                  c.style.backgroundColor = 'rgba(0, 123, 255, 0.3)';
+                }
+              });
+            }
+          }
+        });
+        
+        cell.addEventListener('mouseleave', () => {
+          // 元のマトリクスのホバー状態を解除
+          columnCells.forEach(c => {
+            if (!c.classList.contains('column-highlight')) {
+              c.style.backgroundColor = '';
+            }
+          });
+          
+          // 並び替え後マトリクスのホバー状態も解除
+          const reorderedTable = encReorderedGrid.querySelector('table');
+          if (reorderedTable) {
+            const reorderedPosition = currentKeyInfo.order.indexOf(originalColIndex);
+            if (reorderedPosition !== -1) {
+              const reorderedColumnCells = reorderedTable.querySelectorAll(`th:nth-child(${reorderedPosition + 2}), td:nth-child(${reorderedPosition + 2})`);
+              reorderedColumnCells.forEach(c => {
+                if (!c.classList.contains('column-highlight')) {
+                  c.style.backgroundColor = '';
+                }
+              });
+            }
+          }
+        });
+      });
+    }
+  }
+
   // クリア
   encClear.addEventListener('click', () => {
     encPlain.value = '';
     encCipher.value = '';
+    encKeyword.value = '';
+    encNumeric.value = '';
     encError.classList.add('hidden');
     encGridDiv.innerHTML = '';
     encReorderedGrid.innerHTML = '';
@@ -396,6 +524,24 @@ export function initEncryption() {
     encVisualSection.style.display = 'none';
     encResultSection.style.display = 'none';
     encReorderedSection.style.display = 'none';
+    
+    // 暗号化状態をクリア
+    window.encryptionState = {
+      cipher: null,
+      keyType: null,
+      keyword: null,
+      numeric: null,
+      useKey: true,
+      complete: true,
+      padChar: 'X',
+      colNum: 5
+    };
+    
+    // 復号タブの同期ボタン状態を更新
+    if (window.updateSyncButtonState) {
+      window.updateSyncButtonState();
+    }
+    
     updateEncryptButtonState(); // クリア後も状態を更新
   });
 
@@ -463,7 +609,7 @@ export function initEncryption() {
               // 同じ列の全セルをホバー状態にする
               columnCells.forEach(c => {
                 if (!c.classList.contains('column-highlight')) {
-                  c.style.backgroundColor = 'rgba(0, 123, 255, 0.1)';
+                  c.style.backgroundColor = 'rgba(0, 123, 255, 0.3)';
                 }
               });
               
@@ -471,7 +617,7 @@ export function initEncryption() {
               const cipherChars = encCipherDisplay.querySelectorAll(`[data-column="${colIndex}"]`);
               cipherChars.forEach(char => {
                 if (!char.classList.contains('highlighted')) {
-                  char.style.backgroundColor = 'rgba(0, 123, 255, 0.1)';
+                  char.style.backgroundColor = 'rgba(0, 123, 255, 0.3)';
                 }
               });
             });
@@ -514,6 +660,8 @@ export function initEncryption() {
 
   // 暗号化実行
   encRun.addEventListener('click', () => {
+    window.debugLog('ENCRYPT', '🔐 Starting encryption process...');
+    
     // エラーをクリア（パディング文字エラーは残す）
     if (!encError.textContent.includes('埋字')) {
       encError.classList.add('hidden');
@@ -534,24 +682,30 @@ export function initEncryption() {
       const plain = normalizeInput(rawPlain, { stripSpace: encStrip.checked, stripSymbol: encStripSymbol.checked, uppercase: encUpper.checked });
       if (!plain.length) throw new Error('平文が空です（整形後）。');
 
+      window.debugLog('ENCRYPT', `📝 Normalized plaintext: "${plain}" (${plain.length} chars)`);
+
       let keyInfo;
       if (useKey) {
         // 鍵を使用する場合
         const keyType = document.querySelector('input[name="enc-keytype"]:checked').value;
+        window.debugLog('ENCRYPT', `🔑 Using key type: ${keyType}`);
+        
         if (keyType === 'keyword') {
           const keyword = encKeyword.value.trim();
           if (!keyword) throw new Error('キーワードを入力してください。');
           if (keyword.length < 2) throw new Error('キーワードは2文字以上にしてください。');
           keyInfo = keywordOrder(keyword);
+          window.debugLog('ENCRYPT', `🔤 Keyword: "${keyword}" → Order:`, keyInfo);
         } else {
           const numStr = encNumeric.value.trim();
           if (!numStr) throw new Error('鍵数列を入力してください。');
           keyInfo = numericOrder(numStr);
           if (keyInfo && keyInfo.error) throw new Error(keyInfo.error);
+          window.debugLog('ENCRYPT', `🔢 Numeric key: "${numStr}" → Order:`, keyInfo);
         }
         if (!keyInfo || keyInfo.n <= 0) throw new Error('鍵の解析に失敗しました。');
         if (keyInfo.n > plain.length) {
-          console.warn('鍵の長さが平文より長いです。暗号化は可能ですが、セキュリティが低下する可能性があります。');
+          window.debugLog('ENCRYPT', '⚠️ Key length exceeds plaintext length - security may be reduced');
         }
       } else {
         // 鍵なしの場合（1,2,3...の順序）
@@ -563,10 +717,13 @@ export function initEncryption() {
         const order = Array.from({length: colNum}, (_, i) => i);
         const rank = Array.from({length: colNum}, (_, i) => i);
         keyInfo = { order, rank, n: colNum };
+        window.debugLog('ENCRYPT', `🔢 No key mode: ${colNum} columns`);
       }
 
       const n = keyInfo.n;
       const { grid, rows } = buildGridByRows(plain, n, padChar, complete);
+
+      window.debugLog('ENCRYPT', `📊 Grid created: ${rows}×${n} (complete: ${complete}, padding: '${padChar}')`);
 
       // 現在のデータを保存（並び替えボタンで使用）
       currentGrid = grid;
@@ -591,11 +748,20 @@ export function initEncryption() {
       encCipher.value = cipher;
       currentCipher = cipher;
 
+      window.debugLog('ENCRYPT', `🔐 Cipher generated: "${cipher}" (${cipher.length} chars)`);
+      window.debugLog('ENCRYPT', `✅ Encryption completed successfully`);
+
       // 可視化と結果の表示
       // 数列の数値をそのまま表示（1ベース）
       const displayOrder = keyInfo.rank.map(r => r + 1);
       showOrderBadges(encOrderSpan, displayOrder);
       renderGrid(encGridDiv, grid, '暗号化', keyInfo, padChar);
+      
+      // 元のマトリクスにホバー機能を追加
+      setTimeout(() => {
+        setupOriginalMatrixHover();
+      }, 50);
+      
       encVisualSection.style.display = 'block';
       encResultSection.style.display = 'block';
       
@@ -606,9 +772,72 @@ export function initEncryption() {
       // テキストエリアは常に表示
       encCipher.style.display = 'block';
       clearHighlight(); // ハイライトもクリア
+      
+      // 暗号化状態を保存（復号タブで使用）
+      const keyType = useKey ? document.querySelector('input[name="enc-keytype"]:checked').value : null;
+      window.encryptionState = {
+        cipher: cipher,
+        keyType: keyType,
+        keyword: keyType === 'keyword' ? encKeyword.value.trim() : null,
+        numeric: keyType === 'numeric' ? encNumeric.value.trim() : null,
+        useKey: useKey,
+        complete: complete,
+        padChar: padChar,
+        colNum: useKey ? null : parseInt(encColNum.value)
+      };
+      
+      // 復号タブの同期ボタン状態を更新
+      if (window.updateSyncButtonState) {
+        window.updateSyncButtonState();
+      }
     } catch (e) {
+      window.debugLog('ENCRYPT', `❌ Encryption failed: ${e.message}`);
       encError.textContent = e.message;
       encError.classList.remove('hidden');
     }
   });
+  
+  window.debugLog('ENCRYPT', '✅ Encryption module event listeners configured');
+
+  // プリセットUIを初期化する関数
+  async function initializePresetUI() {
+    try {
+      window.debugLog('ENCRYPT', '📋 Initializing preset UI...');
+      
+      const presetData = await loadPresets();
+      const sampleMenu = document.getElementById('enc-sample-menu');
+      
+      if (!sampleMenu) {
+        window.debugLog('ENCRYPT', '❌ Sample menu not found');
+        return;
+      }
+      
+      // 既存のオプションをクリア
+      sampleMenu.innerHTML = '';
+      
+      // プリセットからオプションを動的生成
+      presetData.presets.forEach(preset => {
+        const option = document.createElement('button');
+        option.className = 'sample-option';
+        option.dataset.preset = preset.id;
+        option.textContent = preset.name;
+        option.title = preset.description;
+        
+        // クリックイベントを追加
+        option.addEventListener('click', (e) => {
+          e.stopPropagation();
+          applySamplePreset(preset.id);
+          sampleMenu.classList.add('hidden');
+        });
+        
+        sampleMenu.appendChild(option);
+      });
+      
+      window.debugLog('ENCRYPT', `✅ Generated ${presetData.presets.length} preset options`);
+      
+    } catch (error) {
+      window.debugLog('ENCRYPT', `❌ Failed to initialize preset UI: ${error.message}`);
+      console.error('Failed to initialize preset UI:', error);
+    }
+  }
 }

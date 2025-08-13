@@ -1,0 +1,148 @@
+/* ============================================
+   layout.css - レイアウト構造
+   ============================================ */
+
+/* ヘッダー */
+.header { 
+  padding: 30px 20px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+
+.header-content {
+  position: relative;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.header h1 { 
+  margin: 0 0 8px 0;
+  font-weight: 700;
+  font-size: 2rem;
+  color: var(--fg);
+}
+
+.header-subtitle {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+/* メインコンテナ */
+.container { 
+  max-width: 1100px; 
+  margin: 24px auto; 
+  padding: 0 16px; 
+}
+
+/* タブシステム */
+.tabs { 
+  display: flex; 
+  gap: 8px; 
+  margin-bottom: 12px; 
+  flex-wrap: wrap; 
+}
+
+.tab-button { 
+  background: transparent; 
+  color: var(--fg); 
+  border: 1px solid var(--border); 
+  padding: 8px 12px; 
+  border-radius: 10px; 
+  cursor: pointer; 
+}
+
+.tab-button.active { 
+  background: var(--accent); 
+  color: #071018; 
+  border-color: transparent; 
+}
+
+.tab-content { 
+  display: none; 
+}
+
+.tab-content.active { 
+  display: block; 
+}
+
+/* カード */
+.card { 
+  background: var(--card); 
+  border: 1px solid var(--border); 
+  border-radius: 14px; 
+  padding: 20px; 
+  box-shadow: 0 8px 24px rgba(0,0,0,.25); 
+}
+
+/* セクション構造 */
+.section { 
+  margin-bottom: 32px; 
+  padding: 20px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+:root[data-theme="light"] .section {
+  background: rgba(0,0,0,0.02);
+}
+
+.section:last-child { 
+  margin-bottom: 0; 
+}
+
+.section h2 { 
+  margin: 0 0 16px 0; 
+  font-size: 1.2rem; 
+  color: var(--fg); 
+}
+
+.section h3 { 
+  margin: 16px 0 12px 0; 
+  font-size: 1rem; 
+  color: var(--muted); 
+  font-weight: 600; 
+}
+
+.subsection {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px dashed var(--border);
+}
+
+.subsection:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.subsection h3 {
+  margin: 0 0 12px 0;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+/* フッター */
+.footer {
+  margin-top: 40px;
+  padding: 24px;
+  text-align: center;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.footer-line {
+  margin: 8px 0;
+  font-size: 0.9rem;
+}
+
+.footer a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}

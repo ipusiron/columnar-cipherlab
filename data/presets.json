@@ -1,0 +1,94 @@
+{
+  "presets": [
+    {
+      "id": "1",
+      "name": "①マザーグースの一節",
+      "description": "英語の童謡「Who killed Cock Robin?」とキーワード「MOTHER」のサンプル",
+      "plaintext": "Who killed Cock Robin? I, said the Sparrow,",
+      "keyType": "keyword",
+      "keyword": "MOTHER",
+      "numeric": null,
+      "settings": {
+        "complete": true,
+        "padChar": "X",
+        "stripSpace": true,
+        "stripSymbol": true,
+        "uppercase": true,
+        "useKey": true,
+        "colNum": null
+      }
+    },
+    {
+      "id": "2", 
+      "name": "②ZEBRAS",
+      "description": "有名な暗号例「WE ARE DISCOVERED FLEE AT ONCE」とキーワード「ZEBRAS」のサンプル",
+      "plaintext": "WE ARE DISCOVERED FLEE AT ONCE",
+      "keyType": "keyword",
+      "keyword": "ZEBRAS",
+      "numeric": null,
+      "settings": {
+        "complete": true,
+        "padChar": "X",
+        "stripSpace": true,
+        "stripSymbol": true,
+        "uppercase": true,
+        "useKey": true,
+        "colNum": null
+      }
+    },
+    {
+      "id": "3",
+      "name": "③\"ATTACK AT DAWN\"＋数列",
+      "description": "「ATTACK AT DAWN」と数列鍵「3 1 4 2 5」のサンプル",
+      "plaintext": "ATTACK AT DAWN",
+      "keyType": "numeric",
+      "keyword": null,
+      "numeric": "3 1 4 2 5",
+      "settings": {
+        "complete": true,
+        "padChar": "X",
+        "stripSpace": true,
+        "stripSymbol": true,
+        "uppercase": true,
+        "useKey": true,
+        "colNum": null
+      }
+    },
+    {
+      "id": "4",
+      "name": "④暗号学の父アルベルティ",
+      "description": "アルベルティ「CRYPTOGRAPHYISTHEART」とキーワード「ALBERTI」",
+      "plaintext": "CRYPTOGRAPHY IS THE HEART OF SECURITY",
+      "keyType": "keyword",
+      "keyword": "ALBERTI",
+      "numeric": null,
+      "settings": {
+        "complete": true,
+        "padChar": "X",
+        "stripSpace": true,
+        "stripSymbol": true,
+        "uppercase": true,
+        "useKey": true,
+        "colNum": null
+      }
+    },
+    {
+      "id": "5",
+      "name": "⑤\"HELLO WORLD\"とシンプル数列",
+      "description": "「HELLO WORLD」と簡単な数列「2 1 3」",
+      "plaintext": "HELLO WORLD",
+      "keyType": "numeric", 
+      "keyword": null,
+      "numeric": "2 1 3",
+      "settings": {
+        "complete": true,
+        "padChar": "X",
+        "stripSpace": true,
+        "stripSymbol": true,
+        "uppercase": true,
+        "useKey": true,
+        "colNum": null
+      }
+    }
+  ]
+}

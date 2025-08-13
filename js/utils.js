@@ -1,8 +1,19 @@
 // ===== 共通ユーティリティ関数 =====
 
+// HTMLエスケープ関数（XSS対策）
+export function escapeHtml(text) {
+  if (text == null) return '';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 // 入力テキストの正規化
 export function normalizeInput(text, { stripSpace, stripSymbol, uppercase }) {
-  let t = text;
+  let t = String(text || '').slice(0, 10000); // 長さ制限でDoS防止
   if (stripSpace) t = t.replace(/\s+/g, '');
   if (stripSymbol) t = t.replace(/[^\w]/g, '');
   if (uppercase) t = t.toUpperCase();
@@ -117,7 +128,7 @@ export function renderGrid(el, grid, headerText, orderInfo, padChar, isEncryptio
         cls = 'plaintext';
       }
       
-      html += `<td class="${cls}">${ch || '·'}</td>`;
+      html += `<td class="${cls}">${escapeHtml(ch) || '·'}</td>`;
     }
     html += '</tr>';
   }
@@ -128,16 +139,16 @@ export function renderGrid(el, grid, headerText, orderInfo, padChar, isEncryptio
 // 列順序バッジの表示
 export function showOrderBadges(span, order) {
   if (!order) { span.textContent = '–'; return; }
-  span.innerHTML = order.map(idx => `<span class="key-badge">${idx}</span>`).join('');
+  span.innerHTML = order.map(idx => `<span class="key-badge">${escapeHtml(idx)}</span>`).join('');
 }
 
 // トースト通知
-export function showToast(message) {
+export function showToast(message, type = 'info') {
   const existing = document.querySelector('.toast');
   if (existing) existing.remove();
   
   const toast = document.createElement('div');
-  toast.className = 'toast';
+  toast.className = `toast ${type}`;
   toast.textContent = message;
   document.body.appendChild(toast);
   
@@ -151,14 +162,15 @@ export function showToast(message) {
 // クリップボードへコピー
 export function copyToClipboard(text, button) {
   navigator.clipboard.writeText(text).then(() => {
+    const originalText = button.textContent;
     button.classList.add('copied');
     button.textContent = '✓';
-    showToast('クリップボードにコピーしました');
+    showToast('クリップボードにコピーしました', 'success');
     setTimeout(() => {
       button.classList.remove('copied');
-      button.textContent = '📋';
+      button.textContent = originalText;
     }, 2000);
   }).catch(err => {
-    showToast('コピーに失敗しました');
+    showToast('コピーに失敗しました', 'error');
   });
 }

@@ -1,0 +1,202 @@
+/* ============================================
+   base.css - CSS変数、リセット、基本要素
+   ============================================ */
+
+/* CSS変数定義 - ダークモード */
+:root {
+  --bg: #0b0d12;
+  --fg: #e8ecf1;
+  --muted: #94a3b8;
+  --card: #151923;
+  --accent: #6aa6ff;
+  --border: #263042;
+  --danger: #ff6b6b;
+}
+
+/* CSS変数定義 - ライトモード */
+:root[data-theme="light"] {
+  --bg: #ffffff;
+  --fg: #1f2937;
+  --muted: #6b7280;
+  --card: #f9fafb;
+  --accent: #2563eb;
+  --border: #e5e7eb;
+  --danger: #dc2626;
+}
+
+/* ライトモード用のテキストエリア・入力欄 */
+:root[data-theme="light"] textarea, 
+:root[data-theme="light"] input[type="text"] { 
+  background: #ffffff; 
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+
+/* ライトモード用のボタン */
+:root[data-theme="light"] button { 
+  background: #ffffff; 
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+
+:root[data-theme="light"] button:hover { 
+  background: #f3f4f6; 
+}
+
+:root[data-theme="light"] button.primary { 
+  background: var(--accent); 
+  color: #ffffff; 
+}
+
+:root[data-theme="light"] button.secondary:hover { 
+  background: rgba(37, 99, 235, 0.1); 
+}
+
+:root[data-theme="light"] button.ghost:hover { 
+  background: rgba(107, 114, 128, 0.1); 
+}
+
+/* リセット */
+* { 
+  box-sizing: border-box; 
+}
+
+/* 基本要素 */
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans JP", Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  background: var(--bg);
+  color: var(--fg);
+}
+
+/* 基本的なテキストエリアと入力欄 */
+textarea, input[type="text"] { 
+  background: #0f1420; 
+  color: var(--fg); 
+  border: 1px solid var(--border); 
+  border-radius: 10px; 
+  padding: 10px; 
+}
+
+textarea { 
+  width: 100%; 
+}
+
+input[type="text"] { 
+  width: 100%; 
+}
+
+/* モノスペースフォント */
+.mono { 
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Noto Sans Mono", monospace; 
+}
+
+/* 基本的なボタンスタイル */
+button { 
+  border: 1px solid var(--border); 
+  background: #0f1420; 
+  color: var(--fg); 
+  border-radius: 10px; 
+  padding: 10px 12px; 
+  cursor: pointer; 
+  transition: all 0.2s; 
+}
+
+button:hover { 
+  background: #1a1f2e; 
+}
+
+/* ヘッダーコントロール */
+.header-controls {
+  position: absolute;
+  top: 0;
+  right: -150px;
+  display: flex;
+  gap: 8px;
+}
+
+/* ヘルプボタン */
+.help-button {
+  padding: 8px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  z-index: 1000;
+  transition: all 0.2s;
+}
+
+.help-button:hover {
+  background: var(--accent);
+  color: var(--bg);
+  transform: translateY(-1px);
+}
+
+/* テーマ切り替えボタン */
+.theme-toggle {
+  padding: 8px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  z-index: 1000;
+  transition: all 0.2s;
+}
+
+.theme-toggle:hover {
+  background: var(--accent);
+  color: var(--bg);
+  transform: translateY(-1px);
+}
+
+button.primary { 
+  background: var(--accent); 
+  color: #071018; 
+  border-color: transparent; 
+  font-weight: 700; 
+}
+
+button.primary:hover { 
+  opacity: 0.9; 
+}
+
+button.secondary { 
+  background: transparent; 
+  border: 1px solid var(--accent); 
+  color: var(--accent); 
+}
+
+button.secondary:hover { 
+  background: rgba(106, 166, 255, 0.1); 
+}
+
+button.ghost { 
+  background: transparent; 
+  border-color: var(--muted); 
+  color: var(--muted); 
+}
+
+button.ghost:hover { 
+  background: rgba(148, 163, 184, 0.1); 
+}
+
+button.disabled, button:disabled { 
+  opacity: 0.5; 
+  cursor: not-allowed; 
+}
+
+/* エラーメッセージ */
+.error { 
+  color: var(--danger); 
+  font-size: 0.9rem; 
+  margin-top: 8px; 
+  padding: 8px 12px; 
+  background: rgba(255, 107, 107, 0.1); 
+  border: 1px solid rgba(255, 107, 107, 0.3); 
+  border-radius: 8px; 
+}
+
+/* ユーティリティクラス */
+.hidden { 
+  display: none !important; 
+}

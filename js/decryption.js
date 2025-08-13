@@ -5,7 +5,9 @@ import {
   numericOrder, 
   renderGrid, 
   showOrderBadges, 
-  copyToClipboard 
+  copyToClipboard,
+  showToast,
+  escapeHtml
 } from './utils.js';
 
 // 縦列転置式暗号の復号
@@ -61,6 +63,8 @@ function decryptColumnar(cipher, keyInfo, complete, padChar, autoStrip) {
 }
 
 export function initDecryption() {
+  window.debugLog('DECRYPT', '🔧 Initializing decryption module...');
+  
   // DOM要素の取得
   const decKeyTypeInputs = document.querySelectorAll('input[name="dec-keytype"]');
   const decKeywordRow = document.getElementById('dec-keyword-row');
@@ -83,11 +87,107 @@ export function initDecryption() {
   const decOrderSpan = document.getElementById('dec-order');
   const decGridDiv = document.getElementById('dec-grid');
   const decCopyBtn = document.getElementById('dec-copy');
+  const decSyncBtn = document.getElementById('dec-sync');
   
   // 新しい要素
   const decVisualSection = document.getElementById('dec-visual-section');
   const decResultSection = document.getElementById('dec-result-section');
   const decPlainDisplay = document.getElementById('dec-plain-display');
+
+  // 同期ボタンの有効/無効を制御する関数
+  function updateSyncButtonState() {
+    const hasEncryptionResult = window.encryptionState && window.encryptionState.cipher;
+    decSyncBtn.disabled = !hasEncryptionResult;
+    if (hasEncryptionResult) {
+      decSyncBtn.title = '暗号化タブで使用した暗号文と鍵設定を自動的にこのタブに反映します。';
+    } else {
+      decSyncBtn.title = '同期するには先に暗号化タブで暗号化を実行してください。';
+    }
+  }
+
+  // グローバルからアクセス可能にする
+  window.updateSyncButtonState = updateSyncButtonState;
+
+  // 復号結果のハイライト表示を設定する関数
+  function setupPlaintextHighlight(plaintext, grid, keyInfo) {
+    if (!plaintext) {
+      decPlainDisplay.innerHTML = '';
+      return;
+    }
+    
+    // 復号結果を行ごとに分割してハイライト表示を作成
+    let highlightHtml = '';
+    const cols = keyInfo.n;
+    const rows = grid.length;
+    
+    // 平文は行方向に読み出される（左から右へ、上から下へ）
+    let charIndex = 0;
+    for (let r = 0; r < rows; r++) {
+      // 各行で実際に文字があるセルの数をカウント
+      for (let c = 0; c < cols; c++) {
+        const char = grid[r][c];
+        if (char && char !== '' && charIndex < plaintext.length) {
+          highlightHtml += `<span class="plain-char" data-row="${escapeHtml(r)}" data-char-index="${escapeHtml(charIndex)}">${escapeHtml(plaintext[charIndex])}</span>`;
+          charIndex++;
+        }
+      }
+    }
+    
+    decPlainDisplay.innerHTML = highlightHtml;
+  }
+
+  // 行ホバー機能を設定する関数
+  function setupRowHover(grid, keyInfo) {
+    const table = decGridDiv.querySelector('table');
+    if (!table) return;
+    
+    const rows = grid.length;
+    
+    for (let rowIndex = 0; rowIndex < rows; rowIndex++) {
+      // テーブルの行を取得（ヘッダー行を除くため +2）
+      const tableRow = table.querySelector(`tbody tr:nth-child(${rowIndex + 1})`);
+      if (!tableRow) continue;
+      
+      // 行の全セル（行番号セル + データセル）を取得
+      const rowCells = tableRow.querySelectorAll('th, td');
+      
+      rowCells.forEach(cell => {
+        cell.addEventListener('mouseenter', () => {
+          // 同じ行の全セルをハイライト（暗号化タブと同じ色合い）
+          rowCells.forEach(c => {
+            if (!c.classList.contains('column-highlight')) {
+              c.style.backgroundColor = 'rgba(106, 166, 255, 0.3)';
+            }
+          });
+          
+          // 対応する復号結果の文字をハイライト
+          const plainChars = decPlainDisplay.querySelectorAll(`[data-row="${rowIndex}"]`);
+          plainChars.forEach(char => {
+            char.style.backgroundColor = 'rgba(106, 166, 255, 0.5)';
+            char.style.fontWeight = 'bold';
+            char.style.borderBottom = '2px solid var(--accent)';
+          });
+        });
+        
+        cell.addEventListener('mouseleave', () => {
+          // 行のハイライトを解除
+          rowCells.forEach(c => {
+            if (!c.classList.contains('column-highlight')) {
+              c.style.backgroundColor = '';
+            }
+          });
+          
+          // 復号結果のハイライトを解除
+          const plainChars = decPlainDisplay.querySelectorAll(`[data-row="${rowIndex}"]`);
+          plainChars.forEach(char => {
+            char.style.backgroundColor = '';
+            char.style.fontWeight = '';
+            char.style.borderBottom = '';
+          });
+        });
+      });
+    }
+  }
 
   // 復号ボタンの有効/無効を制御する関数
   function updateDecryptButtonState() {
@@ -100,6 +200,8 @@ export function initDecryption() {
     // 鍵を使用する場合の検証
     if (useKey) {
       const keyType = document.querySelector('input[name="dec-keytype"]:checked').value;
+      
+      // 現在選択されているキータイプの検証
       if (keyType === 'keyword') {
         const keyword = decKeyword.value.trim();
         if (keyword.length === 0) {
@@ -113,6 +215,12 @@ export function initDecryption() {
           hasKey = false;
           isValid = false;
           errorMessages.push('キーワードは2文字以上にしてください。');
+        }
+        
+        // 数列フィールドにも入力がある場合は警告
+        const numericStr = decNumeric.value.trim();
+        if (numericStr.length > 0) {
+          errorMessages.push('数列フィールドに入力がありますが、キーワードが選択されています。数列フィールドをクリアするか、数列モードに切り替えてください。');
         }
       } else {
         const numericStr = decNumeric.value.trim();
@@ -164,6 +272,12 @@ export function initDecryption() {
             }
           }
         }
+        
+        // キーワードフィールドにも入力がある場合は警告
+        const keyword = decKeyword.value.trim();
+        if (keyword.length > 0) {
+          errorMessages.push('キーワードフィールドに入力がありますが、数列が選択されています。キーワードフィールドをクリアするか、キーワードモードに切り替えてください。');
+        }
       }
     } else {
       // 鍵なしの場合は列数をチェック
@@ -188,7 +302,7 @@ export function initDecryption() {
     
     // エラーメッセージの表示/非表示
     if (errorMessages.length > 0) {
-      decError.innerHTML = errorMessages.map(msg => `• ${msg}`).join('<br>');
+      decError.innerHTML = errorMessages.map(msg => `• ${escapeHtml(msg)}`).join('<br>');
       decError.classList.remove('hidden');
     } else {
       decError.classList.add('hidden');
@@ -231,6 +345,17 @@ export function initDecryption() {
   updateDecryptButtonState();
   updatePaddingRowVisibility();
   updateKeySettingsVisibility();
+  updateSyncButtonState();
+  
+  // 初期状態で鍵タイプ切り替えを実行（確実に設定）
+  const initialKeyType = document.querySelector('input[name="dec-keytype"]:checked').value;
+  if (initialKeyType === 'keyword') {
+    decKeywordRow.classList.remove('hidden');
+    decNumericRow.classList.add('hidden');
+  } else {
+    decKeywordRow.classList.add('hidden');
+    decNumericRow.classList.remove('hidden');
+  }
 
   // 鍵の使用チェックボックス変更を監視
   decUseKey.addEventListener('change', updateKeySettingsVisibility);
@@ -238,8 +363,13 @@ export function initDecryption() {
   // 鍵タイプの切替
   decKeyTypeInputs.forEach(r => r.addEventListener('change', () => {
     const v = document.querySelector('input[name="dec-keytype"]:checked').value;
-    decKeywordRow.classList.toggle('hidden', v !== 'keyword');
-    decNumericRow.classList.toggle('hidden', v !== 'numeric');
+    if (v === 'keyword') {
+      decKeywordRow.classList.remove('hidden');
+      decNumericRow.classList.add('hidden');
+    } else {
+      decKeywordRow.classList.add('hidden');
+      decNumericRow.classList.remove('hidden');
+    }
     updateDecryptButtonState(); // 鍵タイプ変更時も状態を更新
   }));
 
@@ -257,16 +387,70 @@ export function initDecryption() {
   decClear.addEventListener('click', () => {
     decCipher.value = '';
     decPlain.value = '';
+    decKeyword.value = '';
+    decNumeric.value = '';
     decError.classList.add('hidden');
     decGridDiv.innerHTML = '';
     decOrderSpan.textContent = '';
     decPlainDisplay.innerHTML = '';
     decPlain.style.display = 'block';
-    decPlainDisplay.style.display = 'none';
+    decPlainDisplay.style.display = 'block';
     // セクションを非表示
     decVisualSection.style.display = 'none';
     decResultSection.style.display = 'none';
     updateDecryptButtonState(); // クリア後も状態を更新
+  });
+
+  // 暗号化結果同期
+  decSyncBtn.addEventListener('click', () => {
+    if (!window.encryptionState || !window.encryptionState.cipher) {
+      showToast('同期するデータがありません。先に暗号化タブで暗号化を実行してください。', 'error');
+      return;
+    }
+    
+    const state = window.encryptionState;
+    
+    // 暗号文を設定
+    decCipher.value = state.cipher;
+    
+    // 鍵設定を同期
+    decUseKey.checked = state.useKey;
+    updateKeySettingsVisibility();
+    
+    if (state.useKey && state.keyType) {
+      // 鍵タイプを設定
+      document.querySelector(`input[name="dec-keytype"][value="${state.keyType}"]`).checked = true;
+      
+      // 鍵タイプに応じて表示を切り替え
+      if (state.keyType === 'keyword') {
+        decKeywordRow.classList.remove('hidden');
+        decNumericRow.classList.add('hidden');
+        decKeyword.value = state.keyword || '';
+        decNumeric.value = '';
+      } else {
+        decKeywordRow.classList.add('hidden');
+        decNumericRow.classList.remove('hidden');
+        decNumeric.value = state.numeric || '';
+        decKeyword.value = '';
+      }
+    } else if (!state.useKey) {
+      // 鍵なしの場合
+      decColNum.value = state.colNum || 5;
+    }
+    
+    // モード設定を同期
+    decComplete.checked = state.complete;
+    updatePaddingRowVisibility();
+    
+    if (state.complete) {
+      decPadChar.value = state.padChar || 'X';
+    }
+    
+    // 状態を更新
+    updateDecryptButtonState();
+    
+    // フィードバック
+    showToast('暗号化タブの設定を同期しました。復号を実行してください。', 'success');
   });
 
   // コピー
@@ -277,6 +461,8 @@ export function initDecryption() {
 
   // 復号実行
   decRun.addEventListener('click', () => {
+    window.debugLog('DECRYPT', '🔓 Starting decryption process...');
+    
     // エラーをクリア（パディング文字エラーは残す）
     if (!decError.textContent.includes('埋字')) {
       decError.classList.add('hidden');
@@ -286,6 +472,8 @@ export function initDecryption() {
       const complete = decComplete.checked;
       const padChar = (decPadChar.value || 'X')[0];
       const autoStrip = decAutoStrip.checked;
+
+      window.debugLog('DECRYPT', `⚙️ Settings: useKey=${useKey}, complete=${complete}, padChar='${padChar}', autoStrip=${autoStrip}`);
       
       // パディング文字の再検証
       if (complete && !/^[A-Za-z]$/.test(padChar)) {
@@ -298,20 +486,26 @@ export function initDecryption() {
       const cipher = rawCipher.replace(/\s+/g, '');
       if (!cipher.length) throw new Error('暗号文が空です（スペース削除後）。');
 
+      window.debugLog('DECRYPT', `📝 Cipher text: "${cipher}" (${cipher.length} chars)`);
+
       let keyInfo;
       if (useKey) {
         // 鍵を使用する場合
         const keyType = document.querySelector('input[name="dec-keytype"]:checked').value;
+        window.debugLog('DECRYPT', `🔑 Using key type: ${keyType}`);
+        
         if (keyType === 'keyword') {
           const keyword = decKeyword.value.trim();
           if (!keyword) throw new Error('キーワードを入力してください。');
           if (keyword.length < 2) throw new Error('キーワードは2文字以上にしてください。');
           keyInfo = keywordOrder(keyword);
+          window.debugLog('DECRYPT', `🔤 Keyword: "${keyword}" → Order:`, keyInfo);
         } else {
           const numStr = decNumeric.value.trim();
           if (!numStr) throw new Error('鍵数列を入力してください。');
           keyInfo = numericOrder(numStr);
           if (keyInfo && keyInfo.error) throw new Error(keyInfo.error);
+          window.debugLog('DECRYPT', `🔢 Numeric key: "${numStr}" → Order:`, keyInfo);
         }
         if (!keyInfo || keyInfo.n <= 0) throw new Error('鍵の解析に失敗しました。');
         
@@ -329,21 +523,39 @@ export function initDecryption() {
         const order = Array.from({length: colNum}, (_, i) => i);
         const rank = Array.from({length: colNum}, (_, i) => i);
         keyInfo = { order, rank, n: colNum };
+        window.debugLog('DECRYPT', `🔢 No key mode: ${colNum} columns`);
       }
 
+      window.debugLog('DECRYPT', `📊 Matrix info: ${keyInfo.n} columns`);
       const { plain, grid, rows } = decryptColumnar(cipher, keyInfo, complete, padChar, autoStrip);
       decPlain.value = plain;
+
+      window.debugLog('DECRYPT', `🔓 Plaintext recovered: "${plain}" (${plain.length} chars)`);
+      window.debugLog('DECRYPT', `📊 Grid reconstructed: ${rows}×${keyInfo.n}`);
+      window.debugLog('DECRYPT', `✅ Decryption completed successfully`);
+
+      // 復号結果のハイライト表示を作成
+      setupPlaintextHighlight(plain, grid, keyInfo);
 
       // 可視化と結果の表示
       // 数列の数値をそのまま表示（1ベース）
       const displayOrder = keyInfo.rank.map(r => r + 1);
       showOrderBadges(decOrderSpan, displayOrder);
       renderGrid(decGridDiv, grid, '復号', keyInfo, padChar);
+      
+      // 行ホバー機能を設定
+      setTimeout(() => {
+        setupRowHover(grid, keyInfo);
+      }, 50);
+      
       decVisualSection.style.display = 'block';
       decResultSection.style.display = 'block';
     } catch (e) {
+      window.debugLog('DECRYPT', `❌ Decryption failed: ${e.message}`);
       decError.textContent = e.message;
       decError.classList.remove('hidden');
     }
   });
+  
+  window.debugLog('DECRYPT', '✅ Decryption module event listeners configured');
 }

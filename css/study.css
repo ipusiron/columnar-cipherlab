@@ -1,0 +1,234 @@
+/* ============================================
+   study.css - 座学タブのスタイル
+   ============================================ */
+
+.study-content { 
+  max-width: 900px; 
+  margin: 0 auto; 
+}
+
+.study-section { 
+  margin: 32px 0; 
+  padding-bottom: 24px; 
+  border-bottom: 1px solid var(--border); 
+}
+
+.study-section:last-child { 
+  border-bottom: none; 
+}
+
+.study-section h3 { 
+  color: var(--accent); 
+  margin: 24px 0 16px; 
+  font-size: 1.3rem; 
+}
+
+.study-section h4 { 
+  color: var(--fg); 
+  margin: 16px 0 8px; 
+}
+
+/* 例題・練習問題ボックス */
+.example-box, .exercise-box {
+  background: #0f1420;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+/* ライトモード用 */
+:root[data-theme="light"] .example-box, 
+:root[data-theme="light"] .exercise-box {
+  background: #f8fafc;
+}
+
+.example-box pre { 
+  margin: 8px 0; 
+  overflow-x: auto; 
+}
+
+.exercise-box details { 
+  margin-top: 12px; 
+}
+
+.exercise-box summary { 
+  cursor: pointer; 
+  color: var(--accent); 
+  padding: 8px;
+  background: rgba(106, 166, 255, 0.1);
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.exercise-box summary:hover { 
+  background: rgba(106, 166, 255, 0.2); 
+}
+
+/* 特徴グリッド */
+.feature-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 16px;
+  margin: 16px 0;
+}
+
+@media (max-width: 768px) {
+  .feature-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+}
+
+.feature-card {
+  background: #0f1420;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+:root[data-theme="light"] .feature-card {
+  background: #f8fafc;
+}
+
+.feature-card h4 { 
+  margin-top: 0; 
+  color: var(--accent); 
+}
+
+.feature-card p { 
+  margin: 8px 0; 
+  font-size: 0.9rem; 
+}
+
+/* 歴史タイムライン */
+.history-timeline {
+  position: relative;
+  padding-left: 30px;
+  margin: 20px 0;
+}
+
+.history-timeline::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+
+.timeline-item {
+  position: relative;
+  margin: 20px 0;
+  padding-left: 20px;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -24px;
+  top: 8px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+}
+
+.timeline-item h4 { 
+  margin: 0 0 8px; 
+  color: var(--accent); 
+}
+
+.timeline-item p { 
+  margin: 0; 
+  color: var(--muted); 
+}
+
+/* 暗号学的特性 */
+.crypto-properties {
+  background: #0f1420;
+  border-radius: 10px;
+  padding: 20px;
+  margin: 16px 0;
+}
+
+:root[data-theme="light"] .crypto-properties {
+  background: #f8fafc;
+}
+
+.crypto-properties ul { 
+  margin: 12px 0; 
+}
+
+.crypto-properties li { 
+  margin: 8px 0; 
+}
+
+/* 警告ボックス */
+.warning-box {
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: 10px;
+  padding: 16px;
+  margin: 20px 0;
+}
+
+.warning-box strong { 
+  color: var(--danger); 
+}
+
+.warning-box p { 
+  margin: 8px 0 0; 
+}
+
+/* 比較テーブル */
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 0.9rem;
+}
+
+.comparison-table th,
+.comparison-table td {
+  border: 1px solid var(--border);
+  padding: 10px;
+  text-align: left;
+}
+
+.comparison-table th {
+  background: #0f1420;
+  color: var(--accent);
+}
+
+:root[data-theme="light"] .comparison-table th {
+  background: #f8fafc;
+}
+
+.comparison-table tr:hover { 
+  background: rgba(106, 166, 255, 0.05); 
+}
+
+/* 実装のヒント */
+.implementation-tips {
+  background: #0f1420;
+  border-radius: 10px;
+  padding: 20px;
+  margin: 16px 0;
+}
+
+:root[data-theme="light"] .implementation-tips {
+  background: #f8fafc;
+}
+
+.implementation-tips ol { 
+  margin: 12px 0; 
+  padding-left: 24px; 
+}
+
+.implementation-tips li { 
+  margin: 6px 0; 
+}
