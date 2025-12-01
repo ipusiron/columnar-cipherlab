@@ -1,3 +1,40 @@
+<!--
+---
+id: day043
+slug: columnar-cipherlab
+
+title: "Columnar CipherLab"
+
+subtitle_ja: "縦列転置式暗号ツール"
+subtitle_en: "Columnar Transposition Cipher Tool"
+
+description_ja: "縦列転置式暗号（Columnar Transposition Cipher）の暗号化・復号化を体験できるWebベースの教育ツール。マトリクス可視化とインタラクティブなUI で暗号アルゴリズムを直感的に学習。"
+description_en: "A web-based educational tool for learning columnar transposition cipher encryption and decryption. Features matrix visualization and interactive UI for intuitive understanding of cipher algorithms."
+
+category_ja:
+  - 古典暗号
+  - 転置式暗号
+category_en:
+  - Classical Cryptography
+  - Transposition Cipher
+
+difficulty: 1
+
+tags:
+  - columnar-transposition
+  - classical-cipher
+  - transposition-cipher
+  - cryptography
+  - visualization
+  - education
+
+repo_url: "https://github.com/ipusiron/columnar-cipherlab"
+demo_url: "https://ipusiron.github.io/columnar-cipherlab/"
+
+hub: true
+---
+-->
+
 # 🔐 Columnar CipherLab - 縦列転置式暗号ツール
 
 ![GitHub Repo stars](https://img.shields.io/github/stars/ipusiron/columnar-cipherlab?style=social)

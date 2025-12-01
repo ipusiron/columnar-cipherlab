@@ -4,52 +4,55 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Columnar CipherLab is a web-based cryptographic tool for columnar transposition cipher encryption and decryption. It's a static HTML/CSS/JavaScript application that runs entirely in the browser.
-
-## Architecture
-
-- **Frontend Only**: Pure client-side application with no backend dependencies
-- **Core Files**:
-  - `index.html`: Main UI with tabbed interface (Encryption, Decryption, Double Transposition, Variants)
-  - `script.js`: All cipher logic and UI interaction handlers
-  - `style.css`: Dark theme styling with CSS variables
-
-## Key Implementation Details
-
-### Cipher Algorithm (script.js)
-- **Encryption**: Text is written row-wise into a matrix, columns are rearranged by key order, then read column-wise
-- **Decryption**: Inverse process considering column heights based on cipher text length
-- **Key Types**: 
-  - Keyword: Converted to numeric order using `localeCompare('ja')`, duplicates prioritize left position
-  - Numeric: Direct sequence (e.g., "3 1 4 2"), validates for duplicates
-
-### UI Components
-- Tab system for different cipher modes
-- Real-time grid visualization showing the transposition matrix
-- Complete/Incomplete mode toggle (with/without padding)
-- Input normalization options (space removal, uppercase conversion)
+Columnar CipherLab is a web-based educational tool for columnar transposition cipher encryption/decryption. Pure client-side application (no backend) hosted on GitHub Pages.
 
 ## Development Commands
 
-This is a static website with no build process. To run locally:
 ```bash
-# Open directly in browser
+# Open in browser (Windows)
 start index.html
 
-# Or use any static server
+# Or use a static server
 python -m http.server 8000
 ```
 
-## Testing Approach
+## Architecture
 
-Manual testing via the browser interface. Use the sample button in the encryption tab for a standard test case:
+### JavaScript Modules (ES6)
+- `js/main.js`: Entry point, initializes all modules on DOMContentLoaded
+- `js/encryption.js`: Encryption tab logic, maintains `window.encryptionState` for sync with decryption
+- `js/decryption.js`: Decryption tab logic, uses `decryptColumnar()` for inverse algorithm
+- `js/utils.js`: Core cipher functions (`keywordOrder`, `numericOrder`, `buildGridByRows`, `renderGrid`)
+- `js/presets.js`: Loads sample presets from `data/presets.json`
+- `js/tabs.js`, `js/theme.js`, `js/help.js`: UI components
+
+### CSS Organization
+- `css/base.css`: CSS variables for theming (dark/light via `data-theme` attribute)
+- `css/cipher.css`: Encryption/decryption grid and result styles
+- `css/components.css`, `css/layout.css`, `css/modal.css`, `css/study.css`: UI components
+
+### Data-Driven Presets
+Sample presets are defined in `data/presets.json`. Add new presets by editing this file without code changes.
+
+## Key Implementation Details
+
+### Cipher Algorithm
+- **Encryption** (`js/encryption.js`): Text written row-wise into matrix → columns rearranged by key order → read column-wise
+- **Decryption** (`js/decryption.js`): Calculates column heights from cipher length, distributes characters by key order, reads row-wise
+- **Key Processing** (`js/utils.js`):
+  - `keywordOrder()`: Uses `localeCompare('ja')`, left position wins for duplicates
+  - `numericOrder()`: Validates 1-n consecutive integers without duplicates
+
+### Security Measures
+- XSS prevention: `escapeHtml()` in `js/utils.js` for all user content rendering
+- DoS prevention: Input length limited to 10,000 characters in `normalizeInput()`
+
+### State Synchronization
+Encryption results stored in `window.encryptionState`, accessed by decryption tab's sync button via `window.updateSyncButtonState()`.
+
+## Testing
+
+Manual testing via browser. Standard test case (サンプル②):
 - Plaintext: "WE ARE DISCOVERED FLEE AT ONCE"
 - Keyword: "ZEBRAS"
-- Expected output with complete mode and padding 'X'
-
-## Future Development Areas
-
-Per README.md, planned features include:
-- Double transposition (vertical→vertical, vertical→horizontal)
-- Variant forms (diagonal, spiral readout)
-- Clipboard integration and operation history
+- Mode: Complete with padding 'X'
