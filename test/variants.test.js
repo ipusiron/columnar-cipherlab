@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  parseKeyword, parseNumericKey, parseAnyKey, keyFromOrder, encrypt, decrypt, encryptDouble, decryptDouble,
+  parseKeyword, parseNumericKey, parseAnyKey, keyFromOrder, encrypt, decrypt, encryptDouble, decryptDouble, randomNulls,
   displayRank, readOrder, stripTrailingPadding
 } from '../js/columnar-core.js';
 
@@ -89,4 +89,27 @@ test('readOrder は行優先の通し番号を読み出し順に並べる', () =
   assert.deepEqual(readOrder(5, parseKeyword('KEY'), false), [1, 4, 0, 3, 2]);
   assert.deepEqual(readOrder(5, parseKeyword('KEY'), true), [1, 4, 0, 3, 2, 5]);
   assert.deepEqual(readOrder(6, mysz('AAB'), true), [0, 1, 3, 4, 2, 5]);
+});
+
+test('埋字を文字列で渡す（Wikipedia の QKJEU の例）', () => {
+  const r = encrypt(W, parseKeyword('ZEBRAS'), { complete: true, padText: 'QKJEU' });
+  assert.equal(r.cipher, 'EVLNEACDTKESEAQROFOJDEECUWIREE');
+  assert.equal(r.padCount, 5);
+  assert.equal(r.endsWithPad, false);
+  assert.deepEqual(r.grid[4].map(c => c.kind), ['plain', 'pad', 'pad', 'pad', 'pad', 'pad']);
+  assert.equal(encrypt(W, parseKeyword('ZEBRAS'), { complete: true, padText: 'QKJE' }).error.key, 'pad.invalid');
+  assert.equal(encrypt(W, parseKeyword('ZEBRAS'), { complete: true, padText: 'QKJE1' }).error.key, 'pad.invalid');
+  assert.equal(encrypt(W, parseKeyword('ZEBRAS'), { complete: false, padText: '' }).cipher, 'EVLNACDTESEAROFODEECWIREE');
+});
+
+test('ランダムな英字（ヌル）は A〜Z だけで、偏りの元になる値を捨てる', () => {
+  assert.match(randomNulls(500), /^[A-Z]{500}$/);
+  assert.equal(randomNulls(0), '');
+  // 0〜233 は使い、234〜255 は捨てる（26 の倍数 234 までに限ると各文字の確率が等しい）
+  let call = 0;
+  const fake = buf => {
+    if (call++ === 0) { buf.fill(255); buf.set([0, 25, 233, 234, 255]); } else { buf.fill(1); }
+    return buf;
+  };
+  assert.equal(randomNulls(4, fake), 'AZZB');
 });

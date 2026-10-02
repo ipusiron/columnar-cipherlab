@@ -151,24 +151,39 @@ function segmentsOf(length, key, complete) {
 }
 
 // 暗号化。grid は行×列のセル { ch, kind: 'plain' | 'pad' | 'empty' }
-export function encrypt(text, key, { complete = true, padChar = 'X' } = {}) {
+// padText を渡すと、埋字をその文字列の先頭から順に使う（ランダムな英字＝ヌルで埋めるとき。足りなければエラー）
+export function encrypt(text, key, { complete = true, padChar = 'X', padText = null } = {}) {
   const chars = Array.from(String(text ?? ''));
   const L = chars.length;
   if (!L) return err('enc.empty');
-  if (complete && !validatePadChar(padChar).ok) return err('pad.invalid');
   const n = key.n;
   const rows = Math.ceil(L / n);
   const total = complete ? rows * n : L;
+  const pads = padText === null ? null : Array.from(String(padText));
+  if (complete && pads === null && !validatePadChar(padChar).ok) return err('pad.invalid');
+  if (complete && pads !== null && (pads.length < total - L || pads.some(c => !/^[A-Za-z]$/.test(c)))) return err('pad.invalid');
   const cells = [];
   for (let i = 0; i < rows * n; i++) {
     if (i < L) cells.push({ ch: chars[i], kind: 'plain' });
-    else if (i < total) cells.push({ ch: padChar, kind: 'pad' });
+    else if (i < total) cells.push({ ch: pads ? pads[i - L] : padChar, kind: 'pad' });
     else cells.push({ ch: '', kind: 'empty' });
   }
   const grid = Array.from({ length: rows }, (_, r) => cells.slice(r * n, (r + 1) * n));
   const cipher = readOrder(L, key, complete).map(i => cells[i].ch).join('');
-  const endsWithPad = complete && chars[L - 1] === padChar;
+  const endsWithPad = complete && pads === null && chars[L - 1] === padChar;
   return { cipher, grid, rows, n, length: L, padCount: total - L, segments: segmentsOf(L, key, complete), endsWithPad };
+}
+
+// ランダムな英字（ヌル）を count 文字作る。crypto.getRandomValues で、26文字が等しい確率になるよう 234 以上は捨てる
+export function randomNulls(count, getRandomValues = buf => globalThis.crypto.getRandomValues(buf)) {
+  let out = '';
+  while (out.length < count) {
+    const buf = getRandomValues(new Uint8Array(Math.max(16, count * 2)));
+    for (const b of buf) {
+      if (b < 234 && out.length < count) out += String.fromCharCode(65 + (b % 26));
+    }
+  }
+  return out;
 }
 
 // 列ごとの高さ（元の列順）。不完全では左から余りの本数だけ1行長い

@@ -52,6 +52,7 @@ The screenshots of the Japanese screen (including decryption, the light theme an
 - Number sequence: the column order is given directly (e.g. 3 1 4 2 5). Full-width digits, commas and the Japanese comma are also accepted
 - No key: the columns are read from the left without reordering (2 to 20 columns)
 - Complete / incomplete mode: choose whether to pad the matrix to a rectangle with a padding letter
+- Pad with random letters (nulls): uses meaningless letters chosen by the browser's cryptographic random number generator (`crypto.getRandomValues`) as padding, in the same way as the Wikipedia ZEBRAS example (nulls QKJEU)
 - Automatic padding removal: removes up to (columns − 1) padding letters from the end of the decrypted text and shows how many were removed
 - Input validation: the buttons are enabled only for valid input. In complete mode, a ciphertext whose length is not a multiple of the column count is rejected with the reason and the lengths that would fit
 
@@ -181,6 +182,8 @@ The final plaintext is "HELLOWORLD".
 In complete mode, if the plaintext itself ends with the padding letter, the ciphertext alone cannot tell it from padding. With the keyword "KEY" and padding X, the plaintext "FO" (F O + padding X) and the plaintext "FOX" both give the ciphertext "OFX".
 
 The tool warns about this at encryption time and, when decrypting, shows how many padding letters were removed. There are at most (columns − 1) padding letters, so no more than that are removed.
+
+In practice, messages are also padded with meaningless letters (nulls). Choosing "Pad with random letters (nulls)" in the Encrypt tab pads with randomly chosen letters and tells you how many were added. Nulls cannot be told apart from the end of the plaintext, so they are not removed automatically when decrypting (passing the ciphertext to the Decrypt tab by sync or a share link turns off "Remove padding automatically").
 
 ---
 
@@ -469,7 +472,7 @@ npm test
 - Runs with `node --test` on Node.js 22 or later. No dependencies
 - GitHub Actions runs it on every push and pull request
 - Core logic: known answers of the Wikipedia ZEBRAS example and the five samples, and 1,200 round trips (10 keys × lengths 1 to 60 × complete/incomplete) checked against an independent reference implementation
-- Variants: known answers of the Wikipedia Myszkowski (TOMATO) and double transposition (ZEBRAS → STRIPE) examples, and 480 Myszkowski round trips
+- Variants: known answers of the Wikipedia Myszkowski (TOMATO) and double transposition (ZEBRAS → STRIPE) examples, 480 Myszkowski round trips, the known answer padded with nulls (QKJEU), and a check that the random letters are unbiased
 - Cryptanalysis lab: the brute-force ranks and scores match the reference implementation; narrowing with a known word; the transposition hint; the workbench labels
 - Share links: round trips, no plaintext field, and values out of range are not loaded
 - Japanese/English: the keys of the two dictionaries match, the HTML texts match the dictionary, and no Japanese remains in the English texts, the Learn tab or the help

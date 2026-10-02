@@ -8,8 +8,8 @@ title: "Columnar CipherLab"
 subtitle_ja: "縦列転置式暗号ツール"
 subtitle_en: "Columnar Transposition Cipher Tool"
 
-description_ja: "縦列転置式暗号（Columnar Transposition Cipher）の暗号化・復号化を体験できるWebベースの教育ツール。マトリクス可視化とインタラクティブなUI で暗号アルゴリズムを直感的に学習。"
-description_en: "A web-based educational tool for learning columnar transposition cipher encryption and decryption. Features matrix visualization and interactive UI for intuitive understanding of cipher algorithms."
+description_ja: "縦列転置式暗号（Columnar Transposition Cipher）の暗号化・復号を、マトリクスの可視化で学ぶ教育ツール。Myszkowski式と二重転置、鍵のわからない暗号文を総当たりと手作業で解く解読ラボ、平文を含めない共有リンク、日英の切り替えに対応。"
+description_en: "An educational tool for learning columnar transposition encryption and decryption with matrix visualization. Includes the Myszkowski variant, double transposition, a cryptanalysis lab that breaks ciphertexts with an unknown key by brute force and by hand, share links without plaintext, and a Japanese/English switch."
 
 category_ja:
   - 古典暗号
@@ -27,6 +27,9 @@ tags:
   - cryptography
   - visualization
   - education
+  - cryptanalysis
+  - double-transposition
+  - myszkowski
 
 repo_url: "https://github.com/ipusiron/columnar-cipherlab"
 demo_url: "https://ipusiron.github.io/columnar-cipherlab/"
@@ -99,6 +102,7 @@ hub: true
 - 数列方式：数字で列順序を直接指定する（例：3 1 4 2 5）。全角の数字、カンマ、読点も使える
 - 鍵なし：列を並べ替えずに左から読み出す（列数2〜20）
 - 完全/不完全モード：パディング文字（埋字）による長方形化の有無を選ぶ
+- ランダムな英字（ヌル）で埋める：埋字に意味のない英字を使う（ブラウザーの暗号用の乱数`crypto.getRandomValues`で選ぶ）。WikipediaのZEBRASの例（ヌルにQKJEU）と同じ形
 - 埋字の自動除去：復号した文の末尾の埋字を、最大「列数−1」文字まで除き、除いた数を表示する
 - 入力の検証：入力に応じてボタンの有効/無効を切り替える。完全モードで長さが列数の倍数でない暗号文は、理由と合う長さを示して止める
 
@@ -229,6 +233,8 @@ hub: true
 完全モードでは、平文がもともと埋字と同じ文字で終わっていると、暗号文だけでは埋字と区別できません。キーワード「KEY」・埋字Xのとき、平文「FO」（F O ＋埋字X）と平文「FOX」は、どちらも暗号文「OFX」になります。
 
 本ツールは、暗号化の時点でこのことを知らせ、復号では除いた埋字の数を表示します。埋字は最大でも「列数−1」文字なので、それより多くは除きません。
+
+実際の運用では、意味のない英字（ヌル）で埋めることもあります。暗号化タブの「ランダムな英字（ヌル）で埋める」を選ぶと、埋字に乱数で選んだ英字を使い、何文字埋めたかを知らせます。ヌルは平文の末尾と区別できないので、復号のときに自動では除きません（同期や共有リンクで復号タブへ渡すと、「埋字を自動除去」は自動で外れる）。
 
 ---
 
@@ -517,7 +523,7 @@ npm test
 - Node.js 22以上の`node --test`で動く。依存パッケージはない
 - GitHub Actionsで、pushとpull requestのたびに自動で実行する
 - 中核ロジック：WikipediaのZEBRAS例とサンプル5件の既知解答、10種類の鍵×長さ1〜60×完全/不完全の1,200通りの往復を、独立した参照実装と突き合わせる
-- 変種：WikipediaのMyszkowski式（TOMATO）と二重転置（ZEBRAS→STRIPE）の既知解答、Myszkowski式の往復480通り
+- 変種：WikipediaのMyszkowski式（TOMATO）と二重転置（ZEBRAS→STRIPE）の既知解答、Myszkowski式の往復480通り、ヌル（QKJEU）で埋めた例の既知解答と乱数の偏りの検査
 - 解読ラボ：総当たりの順位とスコアが参照実装と同じこと、既知の単語での絞り込み、見分け方、作業台の色分け
 - 共有リンク：往復、平文の欄がないこと、範囲の外の値を読み込まないこと
 - 日英：辞書の日英のキーの一致、HTMLの文言と辞書の一致、英語の文言・座学・ヘルプに日本語が残らないこと

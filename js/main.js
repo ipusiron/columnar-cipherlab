@@ -82,10 +82,11 @@ function applyShare() {
     }
     $('dec-complete').checked = shared.complete;
     if (shared.complete) $('dec-padchar').value = shared.padChar;
+    $('dec-autostrip').checked = !shared.nulls;
     $('dec-complete').dispatchEvent(new Event('change'));
     $('dec-cipher').dispatchEvent(new Event('input'));
     $('tabbtn-dec').click();
-    setText(note, 'share.loadedAnswer');
+    setText(note, shared.nulls ? 'share.loadedAnswerNulls' : 'share.loadedAnswer');
   }
   note.classList.remove('hidden');
 }

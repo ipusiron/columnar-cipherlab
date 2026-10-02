@@ -131,6 +131,12 @@
                 <input id="enc-padchar" type="text" value="X" maxlength="1" class="w1" title="マトリクスの空白部分を埋めるための文字を指定します。一般的にXが使用されますが、平文に含まれない文字を選ぶことが重要です。" data-i18n-title="ui.137" />
                 <span data-i18n="ui.30" class="input-hint">※英字1文字のみ</span>
               </div>
+              <div class="field" id="enc-padmode-row" role="radiogroup" aria-labelledby="enc-padmode-label">
+                <span class="lbl" id="enc-padmode-label" data-i18n="ui.169">埋め方</span>
+                <label><input type="radio" name="enc-padmode" value="fixed" checked> <span data-i18n="ui.170">同じ文字で埋める</span></label>
+                <label><input type="radio" name="enc-padmode" value="random"> <span data-i18n="ui.171">ランダムな英字（ヌル）で埋める</span></label>
+                <span class="input-hint" data-i18n="ui.172">※ヌルで埋めると、復号のときに埋字を自動では除けない（平文の末尾と区別できないため）</span>
+              </div>
               <div class="field options-field">
                 <span data-i18n="ui.31" class="lbl">整形</span>
                 <div class="checkbox-group">
@@ -735,7 +741,7 @@
             <ul>
               <li>本ツールは、平文の最後の文字が埋字と同じときに、暗号化の時点で知らせる</li>
               <li>復号では除いた埋字の数を表示し、表の中で埋字のセルを色分けする</li>
-              <li>実際の運用では、平文に出にくい文字や、意味のない文字（ヌル）を混ぜて埋めることがある</li>
+              <li>実際の運用では、平文に出にくい文字や、意味のない文字（ヌル）を混ぜて埋めることがある。暗号化タブの「ランダムな英字（ヌル）で埋める」で試せる（Wikipediaの例はヌルにQKJEUを使っている）</li>
             </ul>
           </section>
 
@@ -1016,7 +1022,7 @@ Both give the same ciphertext.
             <ul>
               <li>This tool warns at encryption time when the last plaintext letter is the same as the padding letter</li>
               <li>When decrypting, it shows how many padding letters were removed and colors those cells in the matrix</li>
-              <li>In practice, padding is sometimes made of letters that rarely end a message, or of meaningless letters (nulls)</li>
+              <li>In practice, padding is sometimes made of letters that rarely end a message, or of meaningless letters (nulls). Try "Pad with random letters (nulls)" in the Encrypt tab (the Wikipedia example uses QKJEU as nulls)</li>
             </ul>
           </section>
 
@@ -1188,6 +1194,7 @@ Plaintext: SERVEDMICE (SERVED MICE)</pre>
           <div class="help-content">
             <h4>完全モード</h4>
             <p>マトリクスを長方形にするため、不足分をパディング文字（通常は「X」）で埋めます。完全モードの暗号文は、長さが列数の倍数になります。</p>
+            <p>「ランダムな英字（ヌル）で埋める」を選ぶと、埋字に意味のない英字を使います（ブラウザーの暗号用の乱数で選ぶ）。平文の末尾と区別できないので、復号のときは自動で除かず、何文字埋めたかを知らせます。</p>
             <p>復号の「埋字を自動除去」は、末尾の埋字を最大「列数−1」文字まで除きます。平文がもともと埋字と同じ文字で終わっていると区別できません（座学タブの「埋字の曖昧さ」）。</p>
 
             <h4>空白の無視（復号）</h4>
@@ -1311,6 +1318,8 @@ Plaintext: SERVEDMICE (SERVED MICE)</pre>
           <div class="help-content">
             <h4>Complete mode</h4>
             <p>Fills the rest of the matrix with the padding letter (usually "X") to make a rectangle. In complete mode the ciphertext length is a multiple of the column count.</p>
+            <p>"Pad with random letters (nulls)" fills the rest with meaningless letters chosen by the browser's cryptographic random number generator. Because they cannot be told apart from the end
+              of the plaintext, they are not removed automatically when decrypting; the tool tells you how many were added.</p>
             <p>"Remove padding automatically" removes up to (columns − 1) padding letters from the end. If the plaintext itself ended with the padding letter, the two cannot be told apart (see "Padding ambiguity" in the Learn tab).</p>
 
             <h4>Ignoring spaces (decryption)</h4>
