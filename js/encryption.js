@@ -1,6 +1,6 @@
 // ===== 暗号化タブのロジック =====
 
-import { MAX_INPUT_LENGTH, normalizeText, parseKey, validatePadChar, encrypt, reorderGrid, displayRank } from './columnar-core.js';
+import { MAX_INPUT_LENGTH, normalizeText, parseKey, validatePadChar, encrypt, reorderGrid, displayRank, randomNulls } from './columnar-core.js';
 import { el, renderGrid, showOrderBadges, showMessages, copyToClipboard, setText } from './utils.js';
 import { getLang } from './messages.js';
 import { loadPresets, getPresetById } from './presets.js';
@@ -15,6 +15,8 @@ const emptyState = () => ({
   useKey: true,
   complete: true,
   padChar: 'X',
+  padMode: 'fixed',
+  padCount: 0,
   colNum: 5
 });
 
@@ -38,6 +40,9 @@ export function initEncryption() {
   const encComplete = $('enc-complete');
   const encPaddingRow = $('enc-padding-row');
   const encPadChar = $('enc-padchar');
+  const encPadModeRow = $('enc-padmode-row');
+  const encPadModeInputs = document.querySelectorAll('input[name="enc-padmode"]');
+  const padMode = () => document.querySelector('input[name="enc-padmode"]:checked').value;
   const encStrip = $('enc-stripspace');
   const encStripSymbol = $('enc-stripsymbol');
   const encUpper = $('enc-uppercase');
@@ -86,6 +91,7 @@ export function initEncryption() {
       columns: encColNum.value,
       complete: encComplete.checked,
       padChar: encPadChar.value,
+      padMode: padMode(),
       stripSpace: encStrip.checked,
       stripSymbol: encStripSymbol.checked,
       uppercase: encUpper.checked
@@ -100,7 +106,7 @@ export function initEncryption() {
     if (key.error) errors.push(key.error);
     if (form.useKey && form.keyType === 'keyword' && form.numeric.trim()) warnings.push({ key: 'warn.otherFieldKeyword' });
     if (form.useKey && form.keyType === 'numeric' && form.keyword.trim()) warnings.push({ key: 'warn.otherFieldNumeric' });
-    if (form.complete) {
+    if (form.complete && form.padMode === 'fixed') {
       const pad = validatePadChar(form.padChar);
       if (pad.error) errors.push(pad.error);
     }
@@ -140,6 +146,8 @@ export function initEncryption() {
 
   function updatePaddingRowVisibility() {
     encPaddingRow.classList.toggle('hidden', !encComplete.checked);
+    encPadModeRow.classList.toggle('hidden', !encComplete.checked);
+    encPadChar.disabled = padMode() === 'random';
   }
 
   function updateKeySettingsVisibility() {
@@ -167,6 +175,7 @@ export function initEncryption() {
   encKeyTypeInputs.forEach(r => r.addEventListener('change', () => { refreshForm(); markStale(); }));
   encComplete.addEventListener('change', () => { refreshForm(); markStale(); });
   encMyszkowski.addEventListener('change', () => { refreshForm(); markStale(); });
+  encPadModeInputs.forEach(r => r.addEventListener('change', () => { refreshForm(); markStale(); }));
   [encStrip, encStripSymbol, encUpper].forEach(c => c.addEventListener('change', onInputChanged));
   [encPlain, encKeyword, encNumeric, encPadChar, encColNum].forEach(i => i.addEventListener('input', onInputChanged));
 
@@ -203,6 +212,7 @@ export function initEncryption() {
     encUseKey.checked = s.useKey;
     encComplete.checked = s.complete;
     encPadChar.value = s.padChar || 'X';
+    document.querySelector('input[name="enc-padmode"][value="fixed"]').checked = true;
     encStrip.checked = s.stripSpace;
     encStripSymbol.checked = s.stripSymbol;
     encUpper.checked = s.uppercase;
@@ -336,7 +346,9 @@ export function initEncryption() {
     if (!s || !s.cipher) return;
     const keyType = s.useKey ? s.keyType : 'none';
     const key = keyType === 'keyword' ? s.keyword : keyType === 'numeric' ? s.numeric : String(s.colNum);
-    const hash = buildShareHash({ cipher: s.cipher, complete: s.complete, withKey, keyType, key, myszkowski: s.myszkowski, padChar: s.padChar });
+    const hash = buildShareHash({
+      cipher: s.cipher, complete: s.complete, withKey, keyType, key, myszkowski: s.myszkowski, padChar: s.padChar, nulls: s.padMode === 'random'
+    });
     encShareUrl.value = window.location.href.split('#')[0] + hash;
     encShareUrl.classList.remove('hidden');
     copyToClipboard(encShareUrl.value, button, encShareUrl);
@@ -354,7 +366,10 @@ export function initEncryption() {
     }
     const norm = normalizeText(form.plainRaw.trim(), form);
     const padChar = form.padChar;
-    const result = encrypt(norm.text, v.key, { complete: form.complete, padChar });
+    // ランダムな英字（ヌル）で埋めるときは、足りない数だけ暗号用の乱数で作る
+    const random = form.complete && form.padMode === 'random';
+    const need = Math.ceil(Array.from(norm.text).length / v.key.n) * v.key.n - Array.from(norm.text).length;
+    const result = encrypt(norm.text, v.key, { complete: form.complete, padChar, padText: random ? randomNulls(need) : null });
     if (result.error) {
       showMessages(encError, [result.error]);
       return;
@@ -363,6 +378,7 @@ export function initEncryption() {
     const notices = [];
     if (norm.truncated) notices.push({ key: 'warn.truncated', params: { max: MAX_INPUT_LENGTH, length: norm.inputLength } });
     if (result.endsWithPad) notices.push({ key: 'warn.endsWithPad', params: { pad: padChar } });
+    if (random && result.padCount) notices.push({ key: 'info.nullsUsed', params: { count: result.padCount } });
     showMessages(encNotice, notices);
 
     current = { result, key: v.key, padChar };
@@ -392,6 +408,8 @@ export function initEncryption() {
       useKey: form.useKey,
       complete: form.complete,
       padChar,
+      padMode: random ? 'random' : 'fixed',
+      padCount: result.padCount,
       colNum: form.useKey ? null : v.key.n
     };
     if (window.updateSyncButtonState) window.updateSyncButtonState();

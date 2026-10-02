@@ -1,7 +1,7 @@
 // ===== 共有リンク =====
 // 平文は含めない。「#」より後ろ（フラグメント）に書くので、開いたときにサーバーへは送られない。
 // 問題: #tab=lab&c=<暗号文>&m=<complete|incomplete>
-// 解答: #tab=dec&c=<暗号文>&m=...&t=<keyword|numeric|none>&k=<鍵>&my=1（Myszkowski式）&p=<埋字>
+// 解答: #tab=dec&c=<暗号文>&m=...&t=<keyword|numeric|none>&k=<鍵>&my=1（Myszkowski式）&p=<埋字> または &r=1（ランダムな英字で埋めた）
 
 import { MAX_INPUT_LENGTH, parseKey, validatePadChar } from './columnar-core.js';
 
@@ -9,7 +9,7 @@ const MODES = new Set(['complete', 'incomplete']);
 const TYPES = new Set(['keyword', 'numeric', 'none']);
 
 // 共有リンクの「#」以降を作る
-export function buildShareHash({ cipher, complete, withKey = false, keyType = 'keyword', key = '', myszkowski = false, padChar = 'X' }) {
+export function buildShareHash({ cipher, complete, withKey = false, keyType = 'keyword', key = '', myszkowski = false, padChar = 'X', nulls = false }) {
   const params = new URLSearchParams();
   params.set('tab', withKey ? 'dec' : 'lab');
   params.set('c', cipher);
@@ -18,7 +18,8 @@ export function buildShareHash({ cipher, complete, withKey = false, keyType = 'k
     params.set('t', keyType);
     params.set('k', key);
     if (keyType === 'keyword' && myszkowski) params.set('my', '1');
-    if (complete) params.set('p', padChar);
+    if (complete && nulls) params.set('r', '1');
+    else if (complete) params.set('p', padChar);
   }
   return `#${params.toString()}`;
 }
@@ -42,9 +43,10 @@ export function parseShareHash(hash) {
     const myszkowski = params.get('my') === '1';
     const parsed = parseKey({ useKey: keyType !== 'none', keyType, keyword: key, numeric: key, columns: key, myszkowski });
     if (parsed.error) return { error: { key: 'share.invalid' } };
+    const nulls = out.complete && params.get('r') === '1';
     const padChar = params.get('p') ?? 'X';
-    if (out.complete && !validatePadChar(padChar).ok) return { error: { key: 'share.invalid' } };
-    Object.assign(out, { keyType, key, myszkowski: keyType === 'keyword' && myszkowski, padChar });
+    if (out.complete && !nulls && !validatePadChar(padChar).ok) return { error: { key: 'share.invalid' } };
+    Object.assign(out, { keyType, key, myszkowski: keyType === 'keyword' && myszkowski, padChar, nulls });
   }
   return out;
 }

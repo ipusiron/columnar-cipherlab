@@ -216,6 +216,16 @@ export function initDecryption() {
     }
     decComplete.checked = state.complete;
     if (state.complete) decPadChar.value = state.padChar || 'X';
+    // ヌルで埋めた暗号文は、埋字を自動では除けない
+    const nulls = state.complete && state.padMode === 'random';
+    decAutoStrip.checked = !nulls;
+    const note = $('dec-share-note');
+    if (nulls && state.padCount) {
+      setText(note, 'info.nullsSynced', { count: state.padCount });
+      note.classList.remove('hidden');
+    } else {
+      note.classList.add('hidden');
+    }
     refreshForm();
     markStale();
     showToast(t('toast.synced'), 'success');

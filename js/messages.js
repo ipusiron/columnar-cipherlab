@@ -5,6 +5,13 @@
 
 const MESSAGES = {
   ja: {
+    'info.nullsUsed': '末尾の{count}文字を、ランダムな英字（ヌル）で埋めました。復号した文の最後の{count}文字は平文ではありません（自動では除けない）。',
+    'info.nullsSynced': '暗号化では末尾の{count}文字をランダムな英字（ヌル）で埋めたので、「埋字を自動除去」を外しました。復号した文の最後の{count}文字は平文ではありません。',
+    'share.loadedAnswerNulls': '共有リンクから暗号文と鍵を読み込みました。末尾はランダムな英字（ヌル）で埋めてあるので、復号した文の最後の数文字は平文ではありません。',
+    'ui.169': '埋め方',
+    'ui.170': '同じ文字で埋める',
+    'ui.171': 'ランダムな英字（ヌル）で埋める',
+    'ui.172': '※ヌルで埋めると、復号のときに埋字を自動では除けない（平文の末尾と区別できないため）',
     'key.keywordEmpty': 'キーワードを入力してください。',
     'key.keywordChars': 'キーワードは英字（A〜Z）だけで入力してください。',
     'key.keywordShort': 'キーワードは{min}文字以上にしてください。',
@@ -250,6 +257,13 @@ const MESSAGES = {
     'ui.168': 'ヘルプを閉じる'
   },
   en: {
+    'info.nullsUsed': 'Filled the last {count} cells with random letters (nulls). The last {count} letters of the decrypted text are not plaintext (they cannot be removed automatically).',
+    'info.nullsSynced': 'The encryption padded the last {count} cells with random letters (nulls), so "Remove padding automatically" was turned off. The last {count} letters of the decrypted text are not plaintext.',
+    'share.loadedAnswerNulls': 'Loaded the ciphertext and key from a share link. The end is padded with random letters (nulls), so the last few letters of the decrypted text are not plaintext.',
+    'ui.169': 'Padding style',
+    'ui.170': 'Pad with the same letter',
+    'ui.171': 'Pad with random letters (nulls)',
+    'ui.172': 'With nulls, padding cannot be removed automatically when decrypting (it cannot be told apart from the end of the plaintext)',
     'key.keywordEmpty': 'Enter a keyword.',
     'key.keywordChars': 'Use only the letters A–Z in the keyword.',
     'key.keywordShort': 'Use at least {min} letters in the keyword.',
