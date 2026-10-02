@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
   <title>Columnar CipherLab - 縦列転置式暗号ツール</title>
   <script src="js/theme-init.js"></script>
+  <script src="js/file-check.js" defer></script>
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <!-- CSS Files -->
@@ -17,6 +19,10 @@
   <link rel="stylesheet" href="css/modal.css" />
 </head>
 <body>
+  <noscript>
+    <p class="boot-notice">このツールは JavaScript を使います。ブラウザーの設定で JavaScript を有効にしてください。</p>
+  </noscript>
+  <p id="file-notice" class="boot-notice hidden" role="alert">このページは、HTMLファイルを直接開くと動きません（ブラウザーが file:// からのモジュールの読み込みを止めるため）。このフォルダーで <code>python -m http.server 8000</code> を実行し、<code>http://localhost:8000/</code> を開いてください。公開版は <a href="https://ipusiron.github.io/columnar-cipherlab/" rel="noopener noreferrer">https://ipusiron.github.io/columnar-cipherlab/</a> です。</p>
   <header class="header">
     <div class="header-content">
       <div class="header-title">
@@ -566,7 +572,7 @@
   <footer>
     <div class="footer">
       <div class="footer-line">
-        🔗 GitHubリポジトリ: <a href="https://github.com/ipusiron/columnar-cipherlab" target="_blank">ipusiron/columnar-cipherlab</a>
+        🔗 GitHubリポジトリ: <a href="https://github.com/ipusiron/columnar-cipherlab" target="_blank" rel="noopener noreferrer">ipusiron/columnar-cipherlab</a>
       </div>
       <div class="footer-line">
         📚 生成AIで作るセキュリティツール100 - Day043

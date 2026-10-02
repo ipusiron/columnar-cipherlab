@@ -238,3 +238,17 @@ button.disabled, button:disabled {
   white-space: nowrap;
   border: 0;
 }
+
+/* 起動できないときの案内（JavaScript が無効・file:// で開いた） */
+.boot-notice {
+  margin: 0;
+  padding: 12px 16px;
+  background: var(--card);
+  border-bottom: 2px solid var(--danger);
+  color: var(--fg);
+  line-height: 1.6;
+}
+
+.boot-notice a {
+  color: var(--accent);
+}
