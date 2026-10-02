@@ -43,9 +43,11 @@
   background: #f8fafc;
 }
 
-.example-box pre { 
+.example-box pre, .exercise-box pre { 
   margin: 8px 0; 
   overflow-x: auto; 
+  white-space: pre-wrap; 
+  overflow-wrap: anywhere; 
 }
 
 .exercise-box details { 
