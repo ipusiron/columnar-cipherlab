@@ -481,9 +481,11 @@ columnar-cipherlab/
 │   └── presets.json        # サンプルプリセットの定義
 ├── js/                     # JavaScriptモジュール
 │   ├── columnar-core.js    # 整形・鍵の解析・暗号化・復号（DOMに依存しない）
+│   ├── columnar-solver.js  # 解読ラボの総当たり・見分け方・作業台の採点
 │   ├── decryption.js       # 復号タブの画面処理
 │   ├── double.js           # 二重転置タブの画面処理
 │   ├── encryption.js       # 暗号化タブの画面処理
+│   ├── english-stats.js    # 英語の2文字の組と文字の頻度（生成物）
 │   ├── file-check.js       # file://で開いたときの案内
 │   ├── help.js             # ヘルプのダイアログ
 │   ├── main.js             # エントリーポイント
@@ -500,6 +502,7 @@ columnar-cipherlab/
 │   ├── html.test.js        # index.htmlの静的検証
 │   ├── messages.test.js    # 文言のキーと直書きの検査
 │   ├── readme.test.js      # README・座学タブの例の検算
+│   ├── solver.test.js      # 解読ラボの総当たり・見分け方・色分け
 │   └── variants.test.js    # Myszkowski式・二重転置の既知解答と往復
 ├── .gitignore              # Gitの除外設定
 ├── .nojekyll               # GitHub PagesでJekyllを使わない指定
