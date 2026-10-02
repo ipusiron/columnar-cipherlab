@@ -367,3 +367,31 @@
   opacity: 1;
   transform: translateY(0);
 }
+/* 注意（エラーではないお知らせ） */
+.notice {
+  font-size: 0.9rem;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+}
+
+.notice ul, .error ul {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+/* 入力が変わって結果が古いとき */
+.stale-note {
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  border: 1px dashed var(--accent);
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.section.is-stale {
+  border-style: dashed;
+  border-color: var(--accent);
+}

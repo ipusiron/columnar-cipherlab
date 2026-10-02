@@ -24,7 +24,7 @@ const MESSAGES = {
     'warn.otherFieldNumeric': 'キーワードの欄にも入力があります。いまは数列を使います。',
     'warn.truncated': '入力が{max}文字を超えたため、先頭の{max}文字だけを使いました（入力は{length}文字）。',
     'warn.endsWithPad': '平文の最後の文字が埋字と同じ「{pad}」です。復号の自動除去では、この文字と埋字を区別できません。',
-    'info.padStripped': '末尾の「{pad}」を埋字として{count}文字除きました。平文がもともと「{pad}」で終わっていた場合は、「自動除去」を外して確かめてください。',
+    'info.padStripped': '末尾の「{pad}」を埋字として{count}文字除きました。平文がもともと「{pad}」で終わっていた場合は、「埋字を自動除去」を外して確かめてください。',
     'info.padKept': '末尾に埋字は見つかりませんでした。',
     'info.stale': '入力か設定が変わりました。表示中の結果は前回の実行のものです。もう一度実行すると更新されます。',
     'toast.copied': 'クリップボードにコピーしました',
@@ -36,6 +36,8 @@ const MESSAGES = {
     'theme.toLight': 'ライトモードに切り替えます',
     'theme.toDark': 'ダークモードに切り替えます',
     'grid.keyRow': '鍵順',
+    'grid.selectColumn': '{col}列目（鍵順{rank}）を選ぶ',
+    'grid.selectRow': '{row}行目を選ぶ',
     'preset.fallbackName': '①マザーグース（予備）',
     'preset.fallbackDescription': 'サンプルの一覧を読み込めなかったときの予備のサンプル'
   }

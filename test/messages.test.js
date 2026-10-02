@@ -27,3 +27,15 @@ test('差し込み', () => {
   assert.equal(t('no.such.key'), 'no.such.key');
   assert.equal(tr(null), '');
 });
+
+// コメントを除いたコードに日本語の文字列が残っていない（文言は messages.js に集める）
+test('画面のスクリプトに日本語の文字列を直書きしない', () => {
+  const jp = /[\u3040-\u30ff\u3400-\u9fff\uff01-\uff60]/;
+  for (const f of jsFiles.filter(f => f !== 'messages.js')) {
+    const code = read(`js/${f}`)
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .split('\n').map(line => line.replace(/(^|[^:'"`])\/\/.*$/, '$1')).join('\n');
+    const hit = code.split('\n').find(line => jp.test(line));
+    assert.equal(hit, undefined, `${f}: ${hit}`);
+  }
+});

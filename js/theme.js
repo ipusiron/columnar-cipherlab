@@ -1,5 +1,7 @@
 // テーマ切り替え機能
 
+import { t } from './messages.js';
+
 export function initTheme() {
   const themeToggle = document.getElementById('theme-toggle');
   
@@ -39,9 +41,9 @@ function updateButtonText(theme) {
   const themeToggle = document.getElementById('theme-toggle');
   if (theme === 'light') {
     themeToggle.textContent = '🌙';
-    themeToggle.title = 'ダークモードに切り替えます';
+    themeToggle.title = t('theme.toDark');
   } else {
     themeToggle.textContent = '☀️';
-    themeToggle.title = 'ライトモードに切り替えます';
+    themeToggle.title = t('theme.toLight');
   }
 }

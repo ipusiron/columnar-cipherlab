@@ -47,14 +47,14 @@
             <h2>1. 平文入力</h2>
             <div class="sample-buttons">
               <div class="sample-dropdown">
-                <button id="enc-sample" class="sample-btn" title="サンプルの平文と鍵を自動設定します。暗号化の学習や動作確認に便利です。">サンプル設定 ▼</button>
-                <div id="enc-sample-menu" class="sample-menu hidden">
+                <button id="enc-sample" class="sample-btn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="enc-sample-menu" title="サンプルの平文と鍵を自動設定します。暗号化の学習や動作確認に便利です。">サンプル設定 ▼</button>
+                <div id="enc-sample-menu" class="sample-menu hidden" role="menu" aria-label="サンプル">
                   <!-- プリセットオプションは JavaScript で動的に生成されます -->
                 </div>
               </div>
             </div>
           </div>
-          <textarea id="enc-plain" class="mono" rows="4" placeholder="平文を入力" title="暗号化したい文章を入力してください。日本語・英語・記号に対応しています。"></textarea>
+          <textarea id="enc-plain" class="mono" rows="4" placeholder="平文を入力" title="暗号化したい文章を入力してください。1マスに1文字ずつ並べます。日本語も使えます。"></textarea>
         </div>
 
         <!-- 設定エリア -->
@@ -71,21 +71,21 @@
               <div id="enc-key-settings">
                 <div class="field">
                   <label class="lbl">鍵タイプ</label>
-                  <label><input type="radio" name="enc-keytype" value="keyword" checked title="英単語から列順序を自動生成します（例：ZEBRAS → Z=6,E=1,B=2,R=5,A=1,S=4）"> キーワード</label>
+                  <label><input type="radio" name="enc-keytype" value="keyword" checked title="英単語から列順序を自動生成します（例：ZEBRAS → Z=6,E=3,B=2,R=4,A=1,S=5）"> キーワード</label>
                   <label><input type="radio" name="enc-keytype" value="numeric" title="列順序を数字で直接指定します（例：3 1 4 2 5）"> 数列</label>
                 </div>
                 <div class="field key-row" id="enc-keyword-row">
                   <label class="lbl">キーワード</label>
-                  <input id="enc-keyword" type="text" value="" placeholder="例：ZEBRAS / BALLOON" title="英字のみで構成された単語を入力してください。アルファベット順で列順序が決定されます。" />
-                  <span class="input-hint">※半角の英字列（英単語等）、同一アルファベットがあれば左側を若い数値に割り当て</span>
+                  <input id="enc-keyword" type="text" value="" placeholder="例：ZEBRAS / BALLOON" title="英字だけの単語を入力してください。アルファベット順で列順序が決まります。大文字と小文字は区別しません。" />
+                  <span class="input-hint">※英字（A〜Z）だけ。大文字と小文字は区別しない。同じ文字は左の列から若い番号</span>
                 </div>
                 <div class="field key-row hidden" id="enc-numeric-row">
                   <label class="lbl">鍵数列</label>
                   <input id="enc-numeric" type="text" value="" placeholder="1から始まる連続数値を入力 (例: 3 1 4 2 5)" title="列を読み出す順序を数字で指定します。1から始まる連続した数値を使用してください。スペースまたはカンマ区切りで入力可能です。" />
-                  <span class="input-hint">※重複不可、1から始まる数列を推奨</span>
+                  <span class="input-hint">※1から列数までを1回ずつ。10列以上は空白かカンマで区切る</span>
                 </div>
               </div>
-              <div class="field" id="enc-no-key-settings" style="display: none;">
+              <div class="field hidden" id="enc-no-key-settings">
                 <label class="lbl">列数</label>
                 <input id="enc-col-num" type="number" min="2" max="20" value="5" class="w4" title="鍵を使用しない場合の列数を指定します。平文は指定した列数で行方向に書き込まれ、列方向に読み出されます。" />
                 <span class="input-hint">※2～20の範囲で指定</span>
@@ -107,7 +107,7 @@
                 <label class="lbl">整形</label>
                 <div class="checkbox-group">
                   <label><input type="checkbox" id="enc-stripspace" checked title="平文からスペース（空白文字）を削除してから暗号化を行います。"> スペース削除</label>
-                  <label><input type="checkbox" id="enc-stripsymbol" checked title="平文から記号（句読点、数字など）を削除してから暗号化を行います。"> 記号削除</label>
+                  <label><input type="checkbox" id="enc-stripsymbol" checked title="句読点・記号・アンダースコアを削除します。文字（日本語やアクセント付きの文字を含む）と数字は残します。"> 記号削除</label>
                   <label><input type="checkbox" id="enc-uppercase" checked title="平文のアルファベットをすべて大文字に変換してから暗号化を行います。"> 英大文字化</label>
                 </div>
               </div>
@@ -118,11 +118,13 @@
             <button id="enc-run" class="primary" title="設定した条件で暗号化を実行します。平文と鍵の設定が正しい場合のみ有効になります。">暗号化実行</button>
             <button id="enc-clear" class="ghost" title="入力された平文と暗号化結果をすべてクリアします。">クリア</button>
           </div>
-          <div id="enc-error" class="error hidden"></div>
+          <div id="enc-error" class="error hidden" aria-live="polite"></div>
+          <div id="enc-notice" class="notice hidden" aria-live="polite"></div>
+          <p id="enc-stale" class="stale-note hidden" role="status"></p>
         </div>
 
         <!-- 中間状態表示エリア -->
-        <div class="section" id="enc-intermediate-section" style="display: none;">
+        <div class="section hidden" id="enc-intermediate-section">
           <h2>3. 整形後の平文</h2>
           <div class="intermediate-display">
             <code id="enc-formatted-text" class="mono formatted-text"></code>
@@ -135,7 +137,7 @@
         </div>
 
         <!-- 可視化エリア -->
-        <div class="section" id="enc-visual-section" style="display: none;">
+        <div class="section hidden" id="enc-visual-section">
           <h2>4. 暗号化マトリクス</h2>
           <div class="key-visual">
             <div>列順（小さい順に読み出し）：<span id="enc-order"></span></div>
@@ -153,7 +155,7 @@
             <button id="enc-reorder" class="secondary" title="元のマトリクスを鍵の順序に従って並び替えて表示します。暗号化の過程を視覚的に確認できます。">鍵順に並び替え</button>
           </div>
           
-          <div id="enc-reordered-section" style="display: none;">
+          <div id="enc-reordered-section" class="hidden">
             <h3>並び替え後マトリクス（読み出し順）</h3>
             <div class="matrix-legend">
               <span class="legend-item"><span class="legend-sample plaintext">A</span>平文文字</span>
@@ -165,7 +167,7 @@
         </div>
 
         <!-- 暗号文エリア -->
-        <div class="section" id="enc-result-section" style="display: none;">
+        <div class="section hidden" id="enc-result-section">
           <h2>5. 暗号文</h2>
           
           <!-- ハイライト表示 -->
@@ -222,15 +224,15 @@
                 <div class="field key-row" id="dec-keyword-row">
                   <label class="lbl">キーワード</label>
                   <input id="dec-keyword" type="text" value="" placeholder="例：ZEBRAS / BALLOON" title="暗号化時に使用したキーワードと完全に同じものを入力してください。大文字小文字は区別されません。" />
-                  <span class="input-hint">※半角の英字列（英単語等）、同一アルファベットがあれば左側を若い数値に割り当て</span>
+                  <span class="input-hint">※英字（A〜Z）だけ。大文字と小文字は区別しない。同じ文字は左の列から若い番号</span>
                 </div>
                 <div class="field key-row hidden" id="dec-numeric-row">
                   <label class="lbl">鍵数列</label>
                   <input id="dec-numeric" type="text" value="" placeholder="1から始まる連続数値を入力 (例: 3 1 4 2 5)" title="暗号化時に使用した数列と完全に同じものを入力してください。順序と数値が正確でないと復号できません。" />
-                  <span class="input-hint">※重複不可、1から始まる数列を推奨</span>
+                  <span class="input-hint">※1から列数までを1回ずつ。10列以上は空白かカンマで区切る</span>
                 </div>
               </div>
-              <div class="field" id="dec-no-key-settings" style="display: none;">
+              <div class="field hidden" id="dec-no-key-settings">
                 <label class="lbl">列数</label>
                 <input id="dec-col-num" type="number" min="2" max="20" value="5" class="w4" title="暗号化時に使用した列数と同じ値を設定してください。" />
                 <span class="input-hint">※2～20の範囲で指定</span>
@@ -240,8 +242,12 @@
             <div class="setting-group">
               <h3>モード設定</h3>
               <div class="field">
-                <label class="lbl">モード</label>
-                <label><input type="checkbox" id="dec-complete" checked title="暗号化時に完全モードが使用されていた場合はチェックしてください。パディング文字の自動除去が行われます。"> 完全（長方形）</label>
+                <span class="lbl">空白</span>
+                <label><input type="checkbox" id="dec-ignore-space" checked title="暗号文の空白・改行を除いてから復号します。5文字区切りの暗号文などに使います。空白も暗号化した暗号文では外してください。"> 暗号文の空白・改行を無視</label>
+              </div>
+              <div class="field">
+                <span class="lbl">モード</span>
+                <label><input type="checkbox" id="dec-complete" checked title="暗号化のときに完全モード（埋字あり）を使った場合はチェックしてください。暗号文の長さは列数の倍数になります。"> 完全（長方形）</label>
               </div>
               <div class="field" id="dec-padding-row">
                 <label class="lbl">埋字（パディング）</label>
@@ -249,8 +255,8 @@
                 <span class="input-hint">※英字1文字のみ</span>
               </div>
               <div class="field">
-                <label class="lbl"></label>
-                <label><input type="checkbox" id="dec-autostrip" checked title="復号後にパディング文字を自動的に除去します。元の平文を正確に復元できます。"> 自動除去</label>
+                <span class="lbl"></span>
+                <label><input type="checkbox" id="dec-autostrip" checked title="復号した文の末尾にある埋字を、最大「列数−1」文字まで除きます。平文がもともと埋字と同じ文字で終わっていた場合は区別できません。"> 埋字を自動除去</label>
               </div>
             </div>
           </div>
@@ -259,11 +265,13 @@
             <button id="dec-run" class="primary" title="設定した条件で復号を実行します。暗号文と鍵の設定が正しい場合のみ有効になります。">復号実行</button>
             <button id="dec-clear" class="ghost" title="入力された暗号文と復号結果をすべてクリアします。">クリア</button>
           </div>
-          <div id="dec-error" class="error hidden"></div>
+          <div id="dec-error" class="error hidden" aria-live="polite"></div>
+          <div id="dec-notice" class="notice hidden" aria-live="polite"></div>
+          <p id="dec-stale" class="stale-note hidden" role="status"></p>
         </div>
 
         <!-- 可視化エリア -->
-        <div class="section" id="dec-visual-section" style="display: none;">
+        <div class="section hidden" id="dec-visual-section">
           <h2>3. 復号マトリクス</h2>
           <div class="key-visual">
             <div>列順（小さい順に読み込み）：<span id="dec-order"></span></div>
@@ -277,7 +285,7 @@
         </div>
 
         <!-- 復号結果エリア -->
-        <div class="section" id="dec-result-section" style="display: none;">
+        <div class="section hidden" id="dec-result-section">
           <h2>4. 復号結果</h2>
           
           <!-- ハイライト表示 -->
