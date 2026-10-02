@@ -1,8 +1,8 @@
 // ===== 復号タブのロジック =====
 
 import { parseKey, validatePadChar, decrypt, stripTrailingPadding, markTrailingPadding, stripWhitespace, displayRank } from './columnar-core.js';
-import { el, renderGrid, showOrderBadges, showMessages, copyToClipboard, showToast } from './utils.js';
-import { t, tr } from './messages.js';
+import { el, renderGrid, showOrderBadges, showMessages, copyToClipboard, showToast, setText } from './utils.js';
+import { t } from './messages.js';
 
 export function initDecryption() {
   window.debugLog('DECRYPT', 'Initializing decryption module');
@@ -91,7 +91,7 @@ export function initDecryption() {
 
   function updateDecryptButtonState() {
     const v = validate(readForm());
-    showMessages(decError, v.errors.filter(e => !isQuiet(e)).map(tr));
+    showMessages(decError, v.errors.filter(e => !isQuiet(e)));
     decRun.disabled = !v.ok;
     return v;
   }
@@ -99,7 +99,7 @@ export function initDecryption() {
   function markStale() {
     if (!hasResult) return;
     resultSections.forEach(s => s.classList.add('is-stale'));
-    decStale.textContent = t('info.stale');
+    setText(decStale, 'info.stale');
     decStale.classList.remove('hidden');
   }
 
@@ -123,6 +123,7 @@ export function initDecryption() {
 
   refreshForm();
   updateSyncButtonState();
+  document.addEventListener('langchange', updateSyncButtonState);
 
   const onChanged = () => { refreshForm(); markStale(); };
   [decUseKey, decComplete, decAutoStrip, decIgnoreSpace, decMyszkowski, ...decKeyTypeInputs].forEach(i => i.addEventListener('change', onChanged));
@@ -230,15 +231,15 @@ export function initDecryption() {
     const form = readForm();
     const v = validate(form);
     if (!v.ok) {
-      showMessages(decError, v.errors.map(tr));
+      showMessages(decError, v.errors);
       return;
     }
     const result = decrypt(v.cipher, v.key, { complete: form.complete });
     if (result.error) {
-      showMessages(decError, [tr(result.error)]);
+      showMessages(decError, [result.error]);
       return;
     }
-    showMessages(decError, v.errors.map(tr));
+    showMessages(decError, v.errors);
     let text = result.text;
     let grid = result.grid;
     const notices = [];
@@ -247,8 +248,8 @@ export function initDecryption() {
       text = stripped.text;
       grid = markTrailingPadding(result.grid, stripped.removed);
       notices.push(stripped.removed
-        ? t('info.padStripped', { pad: form.padChar, count: stripped.removed })
-        : t('info.padKept'));
+        ? { key: 'info.padStripped', params: { pad: form.padChar, count: stripped.removed } }
+        : { key: 'info.padKept' });
     }
     showMessages(decNotice, notices);
 

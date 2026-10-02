@@ -2,8 +2,7 @@
 // 1段目の鍵で縦列転置し、その暗号文を2段目の鍵でもう一度縦列転置する（埋字なし）。復号は逆の順に戻す
 
 import { normalizeText, parseAnyKey, encryptDouble, decryptDouble, stripWhitespace, displayRank } from './columnar-core.js';
-import { renderGrid, showOrderBadges, showMessages, copyToClipboard } from './utils.js';
-import { t, tr } from './messages.js';
+import { renderGrid, showOrderBadges, showMessages, copyToClipboard, setText } from './utils.js';
 
 const SAMPLE = { text: 'WE ARE DISCOVERED FLEE AT ONCE', key1: 'ZEBRAS', key2: 'STRIPE' };
 
@@ -35,8 +34,8 @@ export function initDouble() {
     const errors = [];
     const k1 = parseAnyKey(key1.value);
     const k2 = parseAnyKey(key2.value);
-    if (k1.error) errors.push({ key: 'dbl.keyError', params: { which: 1, message: tr(k1.error) }, quiet: /Empty$/.test(k1.error.key) });
-    if (k2.error) errors.push({ key: 'dbl.keyError', params: { which: 2, message: tr(k2.error) }, quiet: /Empty$/.test(k2.error.key) });
+    if (k1.error) errors.push({ key: 'dbl.keyError', params: { which: 1, message: k1.error }, quiet: /Empty$/.test(k1.error.key) });
+    if (k2.error) errors.push({ key: 'dbl.keyError', params: { which: 2, message: k2.error }, quiet: /Empty$/.test(k2.error.key) });
     if (!input.value.trim()) errors.push({ key: mode() === 'encrypt' ? 'enc.noInput' : 'dec.empty', quiet: true });
     return { k1, k2, errors, ok: errors.length === 0 };
   }
@@ -46,14 +45,14 @@ export function initDouble() {
     encOptions.classList.toggle('hidden', !isEnc);
     decOptions.classList.toggle('hidden', isEnc);
     const v = validate();
-    showMessages(errorBox, v.errors.filter(e => !e.quiet).map(tr));
+    showMessages(errorBox, v.errors.filter(e => !e.quiet));
     runBtn.disabled = !v.ok;
   }
 
   function markStale() {
     if (!hasResult) return;
     result.classList.add('is-stale');
-    staleNote.textContent = t('info.stale');
+    setText(staleNote, 'info.stale');
     staleNote.classList.remove('hidden');
   }
 
@@ -79,9 +78,9 @@ export function initDouble() {
     }
   });
 
-  function show(step, { grid, key, title, orderLabel }) {
-    $(`dbl-step${step}-title`).textContent = title;
-    $(`dbl-step${step}-label`).textContent = orderLabel;
+  function show(step, { grid, key, title, which }) {
+    setText($(`dbl-step${step}-title`), title);
+    setText($(`dbl-step${step}-label`), 'dbl.orderLabel', { which });
     showOrderBadges($(`dbl-order${step}`), displayRank(key));
     renderGrid($(`dbl-grid${step}`), grid, { ranks: displayRank(key) });
   }
@@ -89,7 +88,7 @@ export function initDouble() {
   function run() {
     const v = validate();
     if (!v.ok) {
-      showMessages(errorBox, v.errors.map(tr));
+      showMessages(errorBox, v.errors);
       return;
     }
     const isEnc = mode() === 'encrypt';
@@ -104,23 +103,23 @@ export function initDouble() {
       r = decryptDouble(cipher, v.k1, v.k2);
     }
     if (r.error) {
-      showMessages(errorBox, [tr(r.error)]);
+      showMessages(errorBox, [r.error]);
       return;
     }
     showMessages(errorBox, []);
     if (isEnc) {
-      show(1, { grid: r.first.grid, key: v.k1, title: t('dbl.step1Enc'), orderLabel: t('dbl.orderLabel', { which: 1 }) });
-      show(2, { grid: r.second.grid, key: v.k2, title: t('dbl.step2Enc'), orderLabel: t('dbl.orderLabel', { which: 2 }) });
-      $('dbl-mid-label').textContent = t('dbl.midEnc');
+      show(1, { grid: r.first.grid, key: v.k1, title: 'dbl.step1Enc', which: 1 });
+      show(2, { grid: r.second.grid, key: v.k2, title: 'dbl.step2Enc', which: 2 });
+      setText($('dbl-mid-label'), 'dbl.midEnc');
       $('dbl-mid').textContent = r.first.cipher;
-      $('dbl-output-title').textContent = t('dbl.outEnc');
+      setText($('dbl-output-title'), 'dbl.outEnc');
       output.value = r.cipher;
     } else {
-      show(1, { grid: r.second.grid, key: v.k2, title: t('dbl.step1Dec'), orderLabel: t('dbl.orderLabel', { which: 2 }) });
-      show(2, { grid: r.first.grid, key: v.k1, title: t('dbl.step2Dec'), orderLabel: t('dbl.orderLabel', { which: 1 }) });
-      $('dbl-mid-label').textContent = t('dbl.midDec');
+      show(1, { grid: r.second.grid, key: v.k2, title: 'dbl.step1Dec', which: 2 });
+      show(2, { grid: r.first.grid, key: v.k1, title: 'dbl.step2Dec', which: 1 });
+      setText($('dbl-mid-label'), 'dbl.midDec');
       $('dbl-mid').textContent = r.second.text;
-      $('dbl-output-title').textContent = t('dbl.outDec');
+      setText($('dbl-output-title'), 'dbl.outDec');
       output.value = r.text;
     }
     hasResult = true;

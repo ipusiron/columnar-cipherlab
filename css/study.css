@@ -252,3 +252,16 @@
 .related-tools a {
   color: var(--accent);
 }
+
+/* 比較表は狭い幅で枠の中だけ横にスクロールする */
+.table-scroll {
+  overflow-x: auto;
+}
+
+@media (max-width: 600px) {
+  .comparison-table th,
+  .comparison-table td {
+    padding: 6px;
+    overflow-wrap: anywhere;
+  }
+}

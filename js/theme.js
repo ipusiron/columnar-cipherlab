@@ -8,6 +8,7 @@ export function initTheme() {
   const currentTheme = () => (document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
 
   updateButton(themeToggle, currentTheme());
+  document.addEventListener('langchange', () => updateButton(themeToggle, currentTheme()));
 
   themeToggle.addEventListener('click', () => {
     const newTheme = currentTheme() === 'dark' ? 'light' : 'dark';

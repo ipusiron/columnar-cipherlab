@@ -1,8 +1,8 @@
 // ===== 暗号化タブのロジック =====
 
 import { MAX_INPUT_LENGTH, normalizeText, parseKey, validatePadChar, encrypt, reorderGrid, displayRank } from './columnar-core.js';
-import { el, renderGrid, showOrderBadges, showMessages, copyToClipboard } from './utils.js';
-import { t, tr } from './messages.js';
+import { el, renderGrid, showOrderBadges, showMessages, copyToClipboard, setText } from './utils.js';
+import { getLang } from './messages.js';
 import { loadPresets, getPresetById } from './presets.js';
 import { buildShareHash } from './share.js';
 
@@ -114,7 +114,7 @@ export function initEncryption() {
 
   function updateEncryptButtonState() {
     const v = validate(readForm());
-    showMessages(encError, [...v.errors.filter(e => !isQuiet(e)), ...v.warnings].map(tr));
+    showMessages(encError, [...v.errors.filter(e => !isQuiet(e)), ...v.warnings]);
     encRun.disabled = !v.ok;
     return v;
   }
@@ -123,7 +123,7 @@ export function initEncryption() {
   function markStale() {
     if (!current) return;
     resultSections.forEach(s => s.classList.add('is-stale'));
-    encStale.textContent = t('info.stale');
+    setText(encStale, 'info.stale');
     encStale.classList.remove('hidden');
   }
 
@@ -349,20 +349,20 @@ export function initEncryption() {
     const form = readForm();
     const v = validate(form);
     if (!v.ok) {
-      showMessages(encError, v.errors.map(tr));
+      showMessages(encError, v.errors);
       return;
     }
     const norm = normalizeText(form.plainRaw.trim(), form);
     const padChar = form.padChar;
     const result = encrypt(norm.text, v.key, { complete: form.complete, padChar });
     if (result.error) {
-      showMessages(encError, [tr(result.error)]);
+      showMessages(encError, [result.error]);
       return;
     }
-    showMessages(encError, v.warnings.map(tr));
+    showMessages(encError, v.warnings);
     const notices = [];
-    if (norm.truncated) notices.push(t('warn.truncated', { max: MAX_INPUT_LENGTH, length: norm.inputLength }));
-    if (result.endsWithPad) notices.push(t('warn.endsWithPad', { pad: padChar }));
+    if (norm.truncated) notices.push({ key: 'warn.truncated', params: { max: MAX_INPUT_LENGTH, length: norm.inputLength } });
+    if (result.endsWithPad) notices.push({ key: 'warn.endsWithPad', params: { pad: padChar } });
     showMessages(encNotice, notices);
 
     current = { result, key: v.key, padChar };
@@ -399,13 +399,14 @@ export function initEncryption() {
 
   encRun.addEventListener('click', run);
 
-  // サンプルの一覧を作る
+  // サンプルの一覧を作る（言語を切り替えたら作り直す）
   async function initializePresetUI() {
     const presetData = await loadPresets();
+    const en = getLang() === 'en';
     encSampleMenu.replaceChildren(...presetData.presets.map(preset => {
       const option = el('button', {
-        className: 'sample-option', text: preset.name,
-        attrs: { type: 'button', role: 'menuitem', 'data-preset': preset.id, title: preset.description }
+        className: 'sample-option', text: (en && preset.name_en) || preset.name,
+        attrs: { type: 'button', role: 'menuitem', 'data-preset': preset.id, title: (en && preset.description_en) || preset.description }
       });
       option.addEventListener('click', e => {
         e.stopPropagation();
@@ -417,4 +418,5 @@ export function initEncryption() {
     }));
   }
   initializePresetUI();
+  document.addEventListener('langchange', initializePresetUI);
 }

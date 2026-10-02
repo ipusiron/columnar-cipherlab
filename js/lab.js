@@ -8,8 +8,8 @@ import {
   createSolver, transpositionCheck, adjacentPairScores, completeKeyLengths,
   SOLVER_MIN_KEY, SOLVER_MAX_KEY, SOLVER_MAX_LENGTH, MIN_LETTERS
 } from './columnar-solver.js';
-import { el, renderGrid, showMessages } from './utils.js';
-import { t, tr } from './messages.js';
+import { el, renderGrid, showMessages, setText, setAttrText } from './utils.js';
+import { t } from './messages.js';
 
 const FREQUENCY_ANALYZER = 'https://ipusiron.github.io/frequency-analyzer/';
 const BENCH_MAX = 20;
@@ -63,20 +63,23 @@ export function initLab() {
       info.replaceChildren();
       return;
     }
-    const lines = [t('lab.length', { length: L })];
     const lengths = completeKeyLengths(L);
-    lines.push(lengths.length ? t('lab.completeLengths', { list: lengths.join(', ') }) : t('lab.completeNone'));
     const check = transpositionCheck(c);
-    const verdict = check.verdict === 'short'
-      ? t('lab.verdict.short', { min: MIN_LETTERS, letters: check.letters })
-      : t(`lab.verdict.${check.verdict}`, { chi: check.chi, letters: check.letters });
-    const link = el('a', {
-      text: t('lab.day009'),
-      attrs: { href: `${FREQUENCY_ANALYZER}?text=${encodeURIComponent(c)}`, target: '_blank', rel: 'noopener noreferrer' }
+    const lines = [
+      { key: 'lab.length', params: { length: L } },
+      lengths.length ? { key: 'lab.completeLengths', params: { list: lengths.join(', ') } } : { key: 'lab.completeNone' },
+      check.verdict === 'short'
+        ? { key: 'lab.verdict.short', params: { min: MIN_LETTERS, letters: check.letters } }
+        : { key: `lab.verdict.${check.verdict}`, params: { chi: check.chi, letters: check.letters } }
+    ];
+    const link = el('a', { attrs: { href: `${FREQUENCY_ANALYZER}?text=${encodeURIComponent(c)}`, target: '_blank', rel: 'noopener noreferrer' } });
+    setText(link, 'lab.day009');
+    const items = lines.map(m => {
+      const li = el('li');
+      setText(li, m.key, m.params);
+      return li;
     });
-    info.replaceChildren(
-      el('ul', {}, [...lines.map(x => el('li', { text: x })), el('li', { text: verdict }), el('li', {}, [link])])
-    );
+    info.replaceChildren(el('ul', {}, [...items, el('li', {}, [link])]));
   }
 
   function validate() {
@@ -90,7 +93,7 @@ export function initLab() {
 
   function refresh() {
     const v = validate();
-    showMessages(errorBox, v.errors.filter(e => !e.quiet).map(tr));
+    showMessages(errorBox, v.errors.filter(e => !e.quiet));
     runBtn.disabled = running || !v.ok;
     updateInfo();
     renderBench();
@@ -99,7 +102,7 @@ export function initLab() {
   function onCipherChanged() {
     if (candidates.length) {
       results.classList.add('is-stale');
-      progress.textContent = t('info.stale');
+      setText(progress, 'info.stale');
       progress.classList.remove('hidden');
     }
     refresh();
@@ -128,13 +131,13 @@ export function initLab() {
     cancelBtn.classList.add('hidden');
     candidates = found;
     results.classList.remove('is-stale');
-    progress.textContent = found.length ? t('lab.done', { tried: tried.toLocaleString('en-US') }) : t('lab.none', { tried: tried.toLocaleString('en-US') });
+    setText(progress, found.length ? 'lab.done' : 'lab.none', { tried: tried.toLocaleString('en-US') });
     renderResults();
     refresh();
   }
 
   function onProgress({ n, done, total }) {
-    progress.textContent = t('lab.progress', { n, done: done + 1, total });
+    setText(progress, 'lab.progress', { n, done: done + 1, total });
   }
 
   function runOnMainThread(cipher, options) {
@@ -155,7 +158,7 @@ export function initLab() {
   function run() {
     const v = validate();
     if (!v.ok) {
-      showMessages(errorBox, v.errors.map(tr));
+      showMessages(errorBox, v.errors);
       return;
     }
     const cipher = cipherText();
@@ -170,7 +173,7 @@ export function initLab() {
     runBtn.disabled = true;
     cancelBtn.classList.remove('hidden');
     progress.classList.remove('hidden');
-    progress.textContent = t('lab.starting');
+    setText(progress, 'lab.starting');
     try {
       worker = new Worker(new URL('./solver-worker.js', import.meta.url), { type: 'module' });
       worker.onmessage = e => {
@@ -198,7 +201,7 @@ export function initLab() {
     worker = null;
     running = false;
     cancelBtn.classList.add('hidden');
-    progress.textContent = t('lab.cancelled');
+    setText(progress, 'lab.cancelled');
     refresh();
   });
 
@@ -206,8 +209,10 @@ export function initLab() {
     resultsBody.replaceChildren(...candidates.map((cand, i) => {
       const keyText = displayRank(cand.key).join(' ');
       const preview = Array.from(cand.text).slice(0, 60).join('') + (Array.from(cand.text).length > 60 ? '…' : '');
-      const benchBtn = el('button', { className: 'ghost small-btn', text: t('lab.toBench'), attrs: { type: 'button', 'data-i': String(i) } });
-      const decBtn = el('button', { className: 'ghost small-btn', text: t('lab.toDecrypt'), attrs: { type: 'button', 'data-i': String(i) } });
+      const benchBtn = el('button', { className: 'ghost small-btn', attrs: { type: 'button', 'data-i': String(i) } });
+      const decBtn = el('button', { className: 'ghost small-btn', attrs: { type: 'button', 'data-i': String(i) } });
+      setText(benchBtn, 'lab.toBench');
+      setText(decBtn, 'lab.toDecrypt');
       benchBtn.addEventListener('click', () => openInBench(cand));
       decBtn.addEventListener('click', () => sendToDecrypt(cand.key.rank, cipherText()));
       return el('tr', {}, [
@@ -233,27 +238,30 @@ export function initLab() {
     const n = Number(benchN.value);
     if (benchRank.length !== n) benchRank = Array.from({ length: n }, (_, i) => i);
     const c = cipherText();
-    const moveBtn = (col, dir) => el('button', {
-      className: 'ghost small-btn',
-      text: dir < 0 ? '←' : '→',
-      attrs: {
-        type: 'button', 'data-col': String(col), 'data-dir': String(dir),
-        'aria-label': t(dir < 0 ? 'lab.moveLeft' : 'lab.moveRight', { col: col + 1 })
-      }
-    });
+    const moveBtn = (col, dir) => {
+      const btn = el('button', {
+        className: 'ghost small-btn', text: dir < 0 ? '←' : '→',
+        attrs: { type: 'button', 'data-col': String(col), 'data-dir': String(dir) }
+      });
+      setAttrText(btn, 'aria-label', dir < 0 ? 'lab.moveLeft' : 'lab.moveRight', { col: col + 1 });
+      return btn;
+    };
     const cards = benchRank.map((r, col) => {
       const left = moveBtn(col, -1);
       const right = moveBtn(col, 1);
       left.disabled = col === 0;
       right.disabled = col === n - 1;
-      const label = el('span', { text: t('lab.benchCol', { col: col + 1, rank: r + 1 }) });
+      const label = el('span');
+      setText(label, 'lab.benchCol', { col: col + 1, rank: r + 1 });
       return el('div', { className: 'bench-col' }, [label, el('div', { className: 'bench-btns' }, [left, right])]);
     });
     benchCols.replaceChildren(...cards);
     if (focus) benchCols.querySelector(`button[data-col="${focus.col}"][data-dir="${focus.dir}"]`)?.focus();
     if (!c) {
       benchPairs.replaceChildren();
-      benchGrid.replaceChildren(el('p', { className: 'section-note', text: t('lab.benchEmpty') }));
+      const empty = el('p', { className: 'section-note' });
+      setText(empty, 'lab.benchEmpty');
+      benchGrid.replaceChildren(empty);
       benchKey.textContent = '';
       benchText.textContent = '';
       return;
@@ -261,10 +269,11 @@ export function initLab() {
     const key = keyFromOrder(benchOrder());
     const d = decrypt(c, key, { complete: false });
     renderGrid(benchGrid, d.grid, { ranks: displayRank(key) });
-    benchPairs.replaceChildren(...adjacentPairScores(d.grid).map((p, i) => el('span', {
-      className: `pair pair-${p.level}`,
-      text: t('lab.pair', { a: i + 1, b: i + 2, level: t(`lab.pair.${p.level}`), avg: p.avg ?? '—' })
-    })));
+    benchPairs.replaceChildren(...adjacentPairScores(d.grid).map((p, i) => {
+      const span = el('span', { className: `pair pair-${p.level}` });
+      setText(span, 'lab.pair', { a: i + 1, b: i + 2, level: { key: `lab.pair.${p.level}` }, avg: p.avg ?? '—' });
+      return span;
+    }));
     benchKey.textContent = displayRank(key).join(' ');
     benchText.textContent = d.text;
   }

@@ -6,7 +6,8 @@ import { initDecryption } from './decryption.js';
 import { initDouble } from './double.js';
 import { initLab, loadLabCipher } from './lab.js';
 import { parseShareHash } from './share.js';
-import { t, tr } from './messages.js';
+import { initI18n } from './i18n.js';
+import { setText } from './utils.js';
 import { initTheme } from './theme.js';
 import { initHelp } from './help.js';
 
@@ -28,6 +29,7 @@ window.debugLog = debugLog;
 // DOMContentLoadedイベントで初期化。1つが失敗しても、ほかの機能は動かす
 document.addEventListener('DOMContentLoaded', () => {
   const steps = [
+    ['i18n', initI18n],
     ['theme', initTheme],
     ['help', initHelp],
     ['tabs', initTabs],
@@ -54,7 +56,7 @@ function applyShare() {
   if (!shared) return;
   const $ = id => document.getElementById(id);
   if (shared.error) {
-    $('lab-share-note').textContent = tr(shared.error);
+    setText($('lab-share-note'), shared.error.key);
     $('lab-share-note').classList.remove('hidden');
     $('tabbtn-lab').click();
     return;
@@ -63,7 +65,7 @@ function applyShare() {
   if (shared.tab === 'lab') {
     loadLabCipher(shared.cipher, shared.complete);
     $('tabbtn-lab').click();
-    note.textContent = t('share.loadedProblem');
+    setText(note, 'share.loadedProblem');
   } else {
     $('dec-cipher').value = shared.cipher;
     $('dec-ignore-space').checked = !/\s/u.test(shared.cipher);
@@ -81,7 +83,7 @@ function applyShare() {
     $('dec-complete').dispatchEvent(new Event('change'));
     $('dec-cipher').dispatchEvent(new Event('input'));
     $('tabbtn-dec').click();
-    note.textContent = t('share.loadedAnswer');
+    setText(note, 'share.loadedAnswer');
   }
   note.classList.remove('hidden');
 }

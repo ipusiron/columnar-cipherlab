@@ -23,15 +23,16 @@ export function renderGrid(container, grid, { ranks = null, colButtons = false, 
   const thead = el('thead');
   const head1 = el('tr', {}, [el('th', { text: '#', attrs: { scope: 'col' } })]);
   for (let c = 0; c < cols; c++) head1.appendChild(el('th', { text: String(c + 1), attrs: { scope: 'col', 'data-col': String(c) } }));
-  const head2 = el('tr', {}, [el('th', { text: t('grid.keyRow'), attrs: { scope: 'row' } })]);
+  const keyHead = el('th', { attrs: { scope: 'row' } });
+  setText(keyHead, 'grid.keyRow');
+  const head2 = el('tr', {}, [keyHead]);
   for (let c = 0; c < cols; c++) {
     const label = ranks ? String(ranks[c]) : '–';
     const th = el('th', { attrs: { 'data-col': String(c) } });
     if (colButtons) {
-      th.appendChild(el('button', {
-        className: 'col-btn', text: label,
-        attrs: { type: 'button', 'data-col': String(c), 'aria-pressed': 'false', 'aria-label': t('grid.selectColumn', { col: c + 1, rank: label }) }
-      }));
+      const btn = el('button', { className: 'col-btn', text: label, attrs: { type: 'button', 'data-col': String(c), 'aria-pressed': 'false' } });
+      setAttrText(btn, 'aria-label', 'grid.selectColumn', { col: c + 1, rank: label });
+      th.appendChild(btn);
     } else {
       th.textContent = label;
     }
@@ -42,10 +43,9 @@ export function renderGrid(container, grid, { ranks = null, colButtons = false, 
   grid.forEach((row, r) => {
     const rowHead = el('th', { attrs: { scope: 'row', 'data-row': String(r) } });
     if (rowButtons) {
-      rowHead.appendChild(el('button', {
-        className: 'row-btn', text: String(r + 1),
-        attrs: { type: 'button', 'data-row': String(r), 'aria-pressed': 'false', 'aria-label': t('grid.selectRow', { row: r + 1 }) }
-      }));
+      const btn = el('button', { className: 'row-btn', text: String(r + 1), attrs: { type: 'button', 'data-row': String(r), 'aria-pressed': 'false' } });
+      setAttrText(btn, 'aria-label', 'grid.selectRow', { row: r + 1 });
+      rowHead.appendChild(btn);
     } else {
       rowHead.textContent = String(r + 1);
     }
@@ -61,20 +61,39 @@ export function renderGrid(container, grid, { ranks = null, colButtons = false, 
   return table;
 }
 
+// 文言を出し、キーを要素に覚えさせる（言語を切り替えたときに i18n.js が出し直す）
+export function setText(node, key, params) {
+  node.textContent = t(key, params);
+  node.dataset.msgKey = key;
+  if (params) node.dataset.msgParams = JSON.stringify(params);
+  else delete node.dataset.msgParams;
+}
+
+// 属性（aria-label など）に文言を入れ、キーを覚えさせる
+export function setAttrText(node, attr, key, params) {
+  node.setAttribute(attr, t(key, params));
+  node.dataset.msgAttr = attr;
+  node.dataset.msgAttrKey = key;
+  if (params) node.dataset.msgAttrParams = JSON.stringify(params);
+}
+
 // 列順のバッジ
 export function showOrderBadges(span, ranks) {
   if (!ranks) { span.textContent = '–'; return; }
   span.replaceChildren(...ranks.map(v => el('span', { className: 'key-badge', text: String(v) })));
 }
 
-// 箇条書きのメッセージ（エラー・注意）を出す。空なら隠す
+// 箇条書きのメッセージ（エラー・注意）を出す。messages は { key, params } の並び。空なら隠す
 export function showMessages(box, messages) {
-  if (!messages.length) {
+  const list = messages.map(({ key, params }) => (params ? { key, params } : { key }));
+  if (!list.length) {
     box.replaceChildren();
     box.classList.add('hidden');
+    delete box.dataset.msgs;
     return;
   }
-  box.replaceChildren(el('ul', {}, messages.map(m => el('li', { text: m }))));
+  box.dataset.msgs = JSON.stringify(list);
+  box.replaceChildren(el('ul', {}, list.map(m => el('li', { text: t(m.key, m.params) }))));
   box.classList.remove('hidden');
 }
 

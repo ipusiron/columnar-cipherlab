@@ -65,5 +65,5 @@ test('ビューポートと file:// の案内', () => {
   assert.match(html, /<meta name="viewport" content="width=device-width, initial-scale=1.0" \/>/);
   assert.ok(!/user-scalable=no|maximum-scale=1/.test(html));
   assert.ok(ids.has('file-notice'));
-  assert.match(read('js/file-check.js'), /protocol === 'file:'/);
+  assert.match(read('js/file-check.js'), /protocol !== 'file:'/);
 });
