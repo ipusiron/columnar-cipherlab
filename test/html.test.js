@@ -66,4 +66,7 @@ test('ビューポートと file:// の案内', () => {
   assert.ok(!/user-scalable=no|maximum-scale=1/.test(html));
   assert.ok(ids.has('file-notice'));
   assert.match(read('js/file-check.js'), /protocol !== 'file:'/);
+  // 案内は起動に失敗したときだけ出す（Firefox は file:// でも起動する）
+  assert.match(read('js/file-check.js'), /getAttribute\('data-ready'\) === 'true'/);
+  assert.match(read('js/main.js'), /dataset\.ready = 'true'/);
 });

@@ -32,6 +32,8 @@ export function applyI18n(root = document) {
   });
   root.querySelectorAll('[data-msgs]').forEach(n => showMessages(n, JSON.parse(n.dataset.msgs)));
   root.querySelectorAll('[data-lang]').forEach(n => { n.hidden = n.dataset.lang !== getLang(); });
+  // 表示中のトースト（数秒で消えるお知らせ）は切り替える前の言語なので消す
+  document.querySelectorAll('.toast').forEach(n => n.remove());
   document.documentElement.lang = getLang();
   const toggle = document.getElementById('lang-toggle');
   if (toggle) {

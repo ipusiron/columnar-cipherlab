@@ -12,7 +12,7 @@ Columnar CipherLab is a web-based educational tool for columnar transposition ci
 # Run the tests (Node.js 22+, no dependencies)
 npm test
 
-# Serve locally. ES modules do not load from file://, so always use HTTP
+# Serve locally. Chrome and Edge do not load ES modules from file:// (Firefox does), so use HTTP
 python -m http.server 8000
 # then open http://localhost:8000/
 ```
@@ -30,7 +30,7 @@ python -m http.server 8000
 - `js/presets.js`: Loads and validates `data/presets.json`, falls back to one built-in preset
 - `js/main.js`: Entry point. Initializes each module separately; `window.debugLog` prints only with `?debug=1`
 - `js/tabs.js`, `js/help.js`, `js/theme.js`: WAI-ARIA tabs, help dialog (focus trap), theme toggle
-- `js/theme-init.js`, `js/file-check.js`: Classic scripts loaded before the modules (theme before first paint, notice when opened via file://)
+- `js/theme-init.js`, `js/file-check.js`: Classic scripts loaded before the modules (theme before first paint, notice when the tool failed to start from file://; main.js sets <html data-ready="true"> after init)
 
 ### CSS Organization
 - `css/base.css`: CSS variables for theming (dark default, light via `data-theme="light"`), inputs (16px), buttons (44px)

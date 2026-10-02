@@ -569,9 +569,9 @@ columnar-cipherlab/
 
 ## 💻 Requirements
 
-- Recent Chrome, Edge, Firefox and Safari (checked with Chromium)
+- Recent Chrome, Edge, Firefox and Safari. Every feature was checked by automated browser tests on Chromium 145, Microsoft Edge 154 and Firefox 140. Safari (WebKit) and real devices have not been checked
 - Brute force in the cryptanalysis lab uses a module Web Worker. In browsers without it, the work is done on the main thread in steps, one key length at a time
-- Because the tool uses ES modules, it does not work when the HTML file is opened directly (`file://`). To run it locally, serve it over HTTP
+- Because the tool uses ES modules, it does not start in Chrome or Edge when the HTML file is opened directly (`file://`); a notice is shown at the top. In Firefox 140 every feature worked even from `file://`. To run it locally, serving it over HTTP is the reliable way
 
 ```bash
 python -m http.server 8000

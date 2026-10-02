@@ -221,7 +221,7 @@ https://ipusiron.github.io/columnar-cipherlab/#tab=dec&c=<img src=x onerror=aler
 
 ### 🗂️ file:// で開いたとき
 
-ES Modulesは`file://`から読み込めないため、HTMLファイルを直接開くとツールは動きません。そのときは、HTTPで配信する方法を画面の上に表示します（この表示は通常のスクリプトで出すので、モジュールが読み込めなくても出る）。
+Chrome・Edgeは`file://`からES Modulesを読み込まないため、HTMLファイルを直接開くとツールは起動しません（Firefox 140では起動する）。そのときは、HTTPで配信する方法を画面の上に表示します（この表示は通常のスクリプトで出すので、モジュールが読み込めなくても出る）。
 
 ### ⚠️ 制限事項
 
