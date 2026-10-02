@@ -124,7 +124,8 @@ export function copyToClipboard(text, button, source) {
     showToast(t('toast.copied'), 'success');
     setTimeout(() => {
       button.classList.remove('copied');
-      button.textContent = originalText;
+      // 2秒のあいだに言語を切り替えていても、いまの言語の文言に戻す
+      button.textContent = button.dataset.i18n ? t(button.dataset.i18n) : originalText;
     }, 2000);
   }).catch(fail);
 }

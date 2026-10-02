@@ -617,9 +617,9 @@ columnar-cipherlab/
 
 ## 💻 動作環境
 
-- 最新のChrome・Edge・Firefox・Safariを想定する（確認はChromiumで行った）
+- 最新のChrome・Edge・Firefox・Safariを想定する。自動操作で全機能を確かめたのはChromium 145・Microsoft Edge 154・Firefox 140。Safari（WebKit）と実機は未確認
 - 解読ラボの総当たりはモジュール形式のWeb Workerを使う。使えないブラウザーでは、画面のスレッドで鍵長ごとに区切って計算する
-- ES Modulesを使うので、HTMLファイルを直接開く（`file://`）と動かない。手元で動かすときは、HTTPで配信する
+- ES Modulesを使うので、Chrome・EdgeではHTMLファイルを直接開く（`file://`）と起動しない（画面の上に案内が出る）。Firefox 140では`file://`でも全機能が動いた。手元で動かすときは、HTTPで配信するのが確実
 
 ```bash
 python -m http.server 8000

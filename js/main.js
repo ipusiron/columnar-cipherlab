@@ -46,6 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error(`Failed to initialize ${name}:`, error);
     }
   }
+  // 起動したことを file-check.js に知らせる（file:// の案内を出すかどうかの判定に使う）
+  document.documentElement.dataset.ready = 'true';
   applyShare();
   window.addEventListener('hashchange', applyShare);
 });
