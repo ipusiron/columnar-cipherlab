@@ -1,43 +1,36 @@
 // ===== タブ切り替えロジック =====
+// WAI-ARIA のタブの形。左右キー・Home・End で移動し、選んだタブだけが Tab キーで止まる
 
 export function initTabs() {
-  window.debugLog('TABS', '🔧 Setting up tab system...');
-  
-  const tabButtons = document.querySelectorAll('.tab-button');
+  const tabButtons = [...document.querySelectorAll('.tab-button')];
   const tabContents = document.querySelectorAll('.tab-content');
 
-  window.debugLog('TABS', `📑 Found ${tabButtons.length} tab buttons and ${tabContents.length} tab contents`);
+  function activate(btn, { focus = false } = {}) {
+    const targetTab = document.getElementById(`tab-${btn.dataset.tab}`);
+    if (!targetTab) return;
+    tabButtons.forEach(b => {
+      const on = b === btn;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-selected', String(on));
+      b.tabIndex = on ? 0 : -1;
+    });
+    tabContents.forEach(s => s.classList.toggle('active', s === targetTab));
+    if (focus) btn.focus();
+    // 復号タブに切り替えた時は同期ボタンの状態を更新
+    if (btn.dataset.tab === 'dec' && window.updateSyncButtonState) window.updateSyncButtonState();
+  }
 
-  tabButtons.forEach(btn => {
-    btn.addEventListener('click', (e) => {
+  tabButtons.forEach((btn, i) => {
+    btn.addEventListener('click', e => {
       e.preventDefault();
-      const targetId = btn.dataset.tab;
-      const targetTab = document.getElementById(`tab-${targetId}`);
-      
-      if (!targetTab) {
-        window.debugLog('TABS', `❌ Tab with id 'tab-${targetId}' not found`);
-        return;
-      }
-      
-      window.debugLog('TABS', `🔄 Switching to tab: ${targetId}`);
-      
-      // Remove active from all
-      tabButtons.forEach(b => b.classList.remove('active'));
-      tabContents.forEach(s => s.classList.remove('active'));
-      
-      // Add active to clicked
-      btn.classList.add('active');
-      targetTab.classList.add('active');
-      
-      // 復号タブに切り替えた時は同期ボタンの状態を更新
-      if (targetId === 'dec' && window.updateSyncButtonState) {
-        window.debugLog('TABS', '🔄 Updating sync button state for decryption tab');
-        window.updateSyncButtonState();
-      }
-      
-      window.debugLog('TABS', `✅ Successfully switched to tab: ${targetId}`);
+      activate(btn);
+    });
+    btn.addEventListener('keydown', e => {
+      const last = tabButtons.length - 1;
+      const next = { ArrowRight: i === last ? 0 : i + 1, ArrowLeft: i === 0 ? last : i - 1, Home: 0, End: last }[e.key];
+      if (next === undefined) return;
+      e.preventDefault();
+      activate(tabButtons[next], { focus: true });
     });
   });
-  
-  window.debugLog('TABS', '✅ Tab system event listeners configured');
 }

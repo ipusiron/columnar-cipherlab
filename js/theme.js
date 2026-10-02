@@ -1,31 +1,23 @@
 // テーマ切り替え機能
+// 最初のテーマは theme-init.js が読み込み前に当てている。ここはボタンの表示と切り替えだけ
 
 import { t } from './messages.js';
 
 export function initTheme() {
   const themeToggle = document.getElementById('theme-toggle');
-  
-  // 初期テーマを確認（デフォルトはダークモード）
-  const savedTheme = localStorage.getItem('theme') || 'dark';
-  window.debugLog('THEME', `📱 Loading saved theme: ${savedTheme}`);
-  
-  applyTheme(savedTheme);
-  updateButtonText(savedTheme);
-  
-  window.debugLog('THEME', `🎨 Theme applied: ${savedTheme}`);
-  
-  // ボタンクリックイベント
+  const currentTheme = () => (document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
+
+  updateButton(themeToggle, currentTheme());
+
   themeToggle.addEventListener('click', () => {
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
-    window.debugLog('THEME', `🔄 Theme switching: ${currentTheme} → ${newTheme}`);
-    
+    const newTheme = currentTheme() === 'dark' ? 'light' : 'dark';
     applyTheme(newTheme);
-    updateButtonText(newTheme);
-    localStorage.setItem('theme', newTheme);
-    
-    window.debugLog('THEME', `💾 Theme saved to localStorage: ${newTheme}`);
+    updateButton(themeToggle, newTheme);
+    try {
+      localStorage.setItem('theme', newTheme);
+    } catch (e) {
+      // 保存できない環境でも、このページを開いている間は切り替わる
+    }
   });
 }
 
@@ -37,13 +29,10 @@ function applyTheme(theme) {
   }
 }
 
-function updateButtonText(theme) {
-  const themeToggle = document.getElementById('theme-toggle');
-  if (theme === 'light') {
-    themeToggle.textContent = '🌙';
-    themeToggle.title = t('theme.toDark');
-  } else {
-    themeToggle.textContent = '☀️';
-    themeToggle.title = t('theme.toLight');
-  }
+function updateButton(button, theme) {
+  const icon = button.querySelector('span') || button;
+  icon.textContent = theme === 'light' ? '🌙' : '☀️';
+  const label = t(theme === 'light' ? 'theme.toDark' : 'theme.toLight');
+  button.title = label;
+  button.setAttribute('aria-label', label);
 }

@@ -9,10 +9,36 @@
   text-align: center;
 }
 
+/* 769px 以上: タイトルを画面の中央に、ボタンを右端に置く */
 .header-content {
-  position: relative;
-  max-width: 800px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  max-width: 1100px;
   margin: 0 auto;
+}
+
+.header-title {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.header-controls {
+  grid-column: 3;
+  justify-self: end;
+}
+
+/* 768px 以下: タイトルの下にボタン */
+@media (max-width: 768px) {
+  .header-content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .header-title,
+  .header-controls {
+    grid-column: 1;
+    justify-self: center;
+  }
 }
 
 .header h1 { 
@@ -56,6 +82,13 @@
 .tab-button.active { 
   background: var(--accent); 
   color: #071018; 
+  border-color: transparent; 
+}
+
+:root[data-theme="light"] .tab-button.active,
+:root[data-theme="light"] .tab-button.active:hover { 
+  background: var(--accent); 
+  color: #ffffff; 
   border-color: transparent; 
 }
 
@@ -145,4 +178,36 @@
 
 .footer a:hover {
   text-decoration: underline;
+}
+/* スマホ: 入れ子の余白を詰めて、内容の幅を確保する */
+@media (max-width: 600px) {
+  .header {
+    padding: 20px 16px;
+  }
+  .header h1 {
+    font-size: 1.6rem;
+  }
+  .container {
+    padding: 0 12px;
+  }
+  .card {
+    padding: 12px;
+  }
+  .section {
+    padding: 14px 12px;
+  }
+}
+
+/* 背景のスクロールを止める（ヘルプを開いている間） */
+body.modal-open {
+  overflow: hidden;
+}
+
+/* 動きを減らす設定 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
 }

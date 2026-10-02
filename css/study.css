@@ -232,3 +232,11 @@
 .implementation-tips li { 
   margin: 6px 0; 
 }
+/* 補足の囲み（ceil の説明など） */
+.note-box {
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(106, 166, 255, 0.1);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+}

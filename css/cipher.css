@@ -44,7 +44,8 @@
 /* マトリクス凡例 */
 .matrix-legend {
   display: flex;
-  gap: 20px;
+  flex-wrap: wrap;
+  gap: 8px 20px;
   margin: 12px 0;
   font-size: 0.85rem;
   color: var(--muted);
@@ -104,6 +105,10 @@
   padding: 8px 12px;
   text-align: center;
   min-width: 40px;
+}
+
+.table th {
+  white-space: nowrap;
 }
 
 .table thead th {
@@ -211,11 +216,12 @@
 }
 
 /* 表の見出しの選択ボタン（見た目は見出しの文字のまま） */
-.col-btn, .row-btn {
+.col-btn, .row-btn,
+:root[data-theme="light"] .col-btn, :root[data-theme="light"] .row-btn {
   min-width: 32px;
   min-height: 32px;
   padding: 4px 8px;
-  border: 1px solid transparent;
+  border: 1px solid var(--border);
   border-radius: 6px;
   background: transparent;
   color: inherit;
@@ -223,11 +229,13 @@
   font-weight: 700;
 }
 
-.col-btn:hover, .row-btn:hover {
+.col-btn:hover, .row-btn:hover,
+:root[data-theme="light"] .col-btn:hover, :root[data-theme="light"] .row-btn:hover {
   border-color: var(--accent);
 }
 
-.col-btn[aria-pressed="true"], .row-btn[aria-pressed="true"] {
+.col-btn[aria-pressed="true"], .row-btn[aria-pressed="true"],
+:root[data-theme="light"] .col-btn[aria-pressed="true"], :root[data-theme="light"] .row-btn[aria-pressed="true"] {
   border-color: var(--accent);
   background: rgba(106, 166, 255, 0.2);
 }

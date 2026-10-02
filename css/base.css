@@ -17,11 +17,11 @@
 :root[data-theme="light"] {
   --bg: #ffffff;
   --fg: #1f2937;
-  --muted: #6b7280;
+  --muted: #4b5563;
   --card: #f9fafb;
-  --accent: #2563eb;
-  --border: #e5e7eb;
-  --danger: #dc2626;
+  --accent: #1d4ed8;
+  --border: #d1d5db;
+  --danger: #b91c1c;
 }
 
 /* ライトモード用のテキストエリア・入力欄 */
@@ -69,13 +69,32 @@ body {
   color: var(--fg);
 }
 
-/* 基本的なテキストエリアと入力欄 */
-textarea, input[type="text"] { 
+/* 基本的なテキストエリアと入力欄（16px 未満だと iOS Safari がフォーカス時に拡大する） */
+textarea, input[type="text"], input[type="number"] { 
   background: #0f1420; 
   color: var(--fg); 
   border: 1px solid var(--border); 
   border-radius: 10px; 
   padding: 10px; 
+  font-size: 16px;
+  min-height: 44px;
+}
+
+input[type="number"] {
+  font-family: inherit;
+}
+
+:root[data-theme="light"] input[type="number"] {
+  background: #ffffff;
+}
+
+/* チェックボックスとラジオボタン（WCAG 2.2 の 2.5.8 の 24px） */
+input[type="checkbox"], input[type="radio"] {
+  width: 24px;
+  height: 24px;
+  margin: 0 8px 0 0;
+  accent-color: var(--accent);
+  flex-shrink: 0;
 }
 
 textarea { 
@@ -98,8 +117,16 @@ button {
   color: var(--fg); 
   border-radius: 10px; 
   padding: 10px 12px; 
+  min-height: 44px;
+  font: inherit;
   cursor: pointer; 
   transition: all 0.2s; 
+}
+
+/* キーボード操作のフォーカス表示 */
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
 }
 
 button:hover { 
@@ -108,15 +135,13 @@ button:hover {
 
 /* ヘッダーコントロール */
 .header-controls {
-  position: absolute;
-  top: 0;
-  right: -150px;
   display: flex;
   gap: 8px;
 }
 
 /* ヘルプボタン */
 .help-button {
+  min-width: 44px;
   padding: 8px 12px;
   background: var(--card);
   border: 1px solid var(--border);
@@ -134,6 +159,7 @@ button:hover {
 
 /* テーマ切り替えボタン */
 .theme-toggle {
+  min-width: 44px;
   padding: 8px 12px;
   background: var(--card);
   border: 1px solid var(--border);

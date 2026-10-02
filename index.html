@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'self';">
   <title>Columnar CipherLab - 縦列転置式暗号ツール</title>
+  <script src="js/theme-init.js"></script>
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <!-- CSS Files -->
@@ -18,28 +19,28 @@
 <body>
   <header class="header">
     <div class="header-content">
+      <div class="header-title">
+        <h1>Columnar CipherLab</h1>
+        <p class="header-subtitle">縦列転置式暗号（Columnar Transposition）で暗号化・復号するWebツール</p>
+      </div>
       <!-- ヘルプとテーマ切り替えボタン -->
       <div class="header-controls">
-        <button id="help-button" class="help-button" title="ヘルプとツールの使い方を表示します">❓</button>
-        <button id="theme-toggle" class="theme-toggle" title="ダークモード/ライトモードを切り替えます">☀️</button>
+        <button id="help-button" class="help-button" type="button" aria-haspopup="dialog" aria-label="ヘルプを開く" title="ヘルプとツールの使い方を表示します"><span aria-hidden="true">❓</span></button>
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-label="テーマを切り替える" title="ダークモード/ライトモードを切り替えます"><span aria-hidden="true">☀️</span></button>
       </div>
-      
-      <h1>Columnar CipherLab</h1>
-      <p class="header-subtitle">縦列転置式暗号（Columnar Transposition）で暗号化・復号するWebツール</p>
     </div>
   </header>
 
   <main class="container">
     
-    <div class="tabs">
-      <button class="tab-button active" data-tab="enc">暗号化</button>
-      <button class="tab-button" data-tab="dec">復号</button>
-      <button class="tab-button" data-tab="double">二重転置（未実装）</button>
-      <button class="tab-button" data-tab="study">座学</button>
+    <div class="tabs" role="tablist" aria-label="機能">
+      <button class="tab-button active" type="button" role="tab" id="tabbtn-enc" data-tab="enc" aria-controls="tab-enc" aria-selected="true">暗号化</button>
+      <button class="tab-button" type="button" role="tab" id="tabbtn-dec" data-tab="dec" aria-controls="tab-dec" aria-selected="false" tabindex="-1">復号</button>
+      <button class="tab-button" type="button" role="tab" id="tabbtn-study" data-tab="study" aria-controls="tab-study" aria-selected="false" tabindex="-1">座学</button>
     </div>
 
     <!-- 暗号化タブ -->
-    <section id="tab-enc" class="tab-content active">
+    <section id="tab-enc" class="tab-content active" role="tabpanel" aria-labelledby="tabbtn-enc">
       <div class="card">
         <!-- 入力エリア -->
         <div class="section">
@@ -64,30 +65,30 @@
             <div class="setting-group">
               <h3>鍵の設定</h3>
               <div class="field">
-                <label class="lbl">鍵の使用</label>
+                <span class="lbl">鍵の使用</span>
                 <label><input type="checkbox" id="enc-use-key" checked title="鍵による列の並び替えを行うかどうかを選択します。チェックを外すと単純な縦読み暗号になります。"> 鍵を使用する</label>
                 <span class="input-hint">※チェックを外すと鍵なし（列の並べ替えなし）で暗号化</span>
               </div>
               <div id="enc-key-settings">
-                <div class="field">
-                  <label class="lbl">鍵タイプ</label>
+                <div class="field" role="radiogroup" aria-labelledby="enc-keytype-label">
+                  <span class="lbl" id="enc-keytype-label">鍵タイプ</span>
                   <label><input type="radio" name="enc-keytype" value="keyword" checked title="英単語から列順序を自動生成します（例：ZEBRAS → Z=6,E=3,B=2,R=4,A=1,S=5）"> キーワード</label>
                   <label><input type="radio" name="enc-keytype" value="numeric" title="列順序を数字で直接指定します（例：3 1 4 2 5）"> 数列</label>
                 </div>
                 <div class="field key-row" id="enc-keyword-row">
-                  <label class="lbl">キーワード</label>
+                  <label class="lbl" for="enc-keyword">キーワード</label>
                   <input id="enc-keyword" type="text" value="" placeholder="例：ZEBRAS / BALLOON" title="英字だけの単語を入力してください。アルファベット順で列順序が決まります。大文字と小文字は区別しません。" />
                   <span class="input-hint">※英字（A〜Z）だけ。大文字と小文字は区別しない。同じ文字は左の列から若い番号</span>
                 </div>
                 <div class="field key-row hidden" id="enc-numeric-row">
-                  <label class="lbl">鍵数列</label>
+                  <label class="lbl" for="enc-numeric">鍵数列</label>
                   <input id="enc-numeric" type="text" value="" placeholder="1から始まる連続数値を入力 (例: 3 1 4 2 5)" title="列を読み出す順序を数字で指定します。1から始まる連続した数値を使用してください。スペースまたはカンマ区切りで入力可能です。" />
                   <span class="input-hint">※1から列数までを1回ずつ。10列以上は空白かカンマで区切る</span>
                 </div>
               </div>
               <div class="field hidden" id="enc-no-key-settings">
-                <label class="lbl">列数</label>
-                <input id="enc-col-num" type="number" min="2" max="20" value="5" class="w4" title="鍵を使用しない場合の列数を指定します。平文は指定した列数で行方向に書き込まれ、列方向に読み出されます。" />
+                <label class="lbl" for="enc-col-num">列数</label>
+                <input id="enc-col-num" type="number" inputmode="numeric" min="2" max="20" value="5" class="w4" title="鍵を使用しない場合の列数を指定します。平文は指定した列数で行方向に書き込まれ、列方向に読み出されます。" />
                 <span class="input-hint">※2～20の範囲で指定</span>
               </div>
             </div>
@@ -95,16 +96,16 @@
             <div class="setting-group">
               <h3>モードと整形</h3>
               <div class="field">
-                <label class="lbl">モード</label>
+                <span class="lbl">モード</span>
                 <label><input type="checkbox" id="enc-complete" checked title="マトリクスを長方形にするため、不足分をパディング文字で埋めます。チェックを外すと最終行が不完全な状態で暗号化されます。"> 完全（パディングで長方形化）</label>
               </div>
               <div class="field" id="enc-padding-row">
-                <label class="lbl">埋字（パディング）</label>
+                <label class="lbl" for="enc-padchar">埋字（パディング）</label>
                 <input id="enc-padchar" type="text" value="X" maxlength="1" class="w1" title="マトリクスの空白部分を埋めるための文字を指定します。一般的にXが使用されますが、平文に含まれない文字を選ぶことが重要です。" />
                 <span class="input-hint">※英字1文字のみ</span>
               </div>
               <div class="field options-field">
-                <label class="lbl">整形</label>
+                <span class="lbl">整形</span>
                 <div class="checkbox-group">
                   <label><input type="checkbox" id="enc-stripspace" checked title="平文からスペース（空白文字）を削除してから暗号化を行います。"> スペース削除</label>
                   <label><input type="checkbox" id="enc-stripsymbol" checked title="句読点・記号・アンダースコアを削除します。文字（日本語やアクセント付きの文字を含む）と数字は残します。"> 記号削除</label>
@@ -115,8 +116,8 @@
           </div>
 
           <div class="buttons">
-            <button id="enc-run" class="primary" title="設定した条件で暗号化を実行します。平文と鍵の設定が正しい場合のみ有効になります。">暗号化実行</button>
-            <button id="enc-clear" class="ghost" title="入力された平文と暗号化結果をすべてクリアします。">クリア</button>
+            <button id="enc-run" type="button" class="primary" title="設定した条件で暗号化を実行します。平文と鍵の設定が正しい場合のみ有効になります。">暗号化実行</button>
+            <button id="enc-clear" type="button" class="ghost" title="入力された平文と暗号化結果をすべてクリアします。">クリア</button>
           </div>
           <div id="enc-error" class="error hidden" aria-live="polite"></div>
           <div id="enc-notice" class="notice hidden" aria-live="polite"></div>
@@ -152,7 +153,7 @@
           <div id="enc-grid" class="gridwrap"></div>
           
           <div class="matrix-control">
-            <button id="enc-reorder" class="secondary" title="元のマトリクスを鍵の順序に従って並び替えて表示します。暗号化の過程を視覚的に確認できます。">鍵順に並び替え</button>
+            <button id="enc-reorder" type="button" class="secondary" title="元のマトリクスを鍵の順序に従って並び替えて表示します。暗号化の過程を視覚的に確認できます。">鍵順に並び替え</button>
           </div>
           
           <div id="enc-reordered-section" class="hidden">
@@ -182,7 +183,7 @@
           <div class="subsection">
             <div class="subsection-header">
               <h3>テキスト出力</h3>
-              <button id="enc-copy" class="copy-btn" title="コピー">コピー</button>
+              <button id="enc-copy" type="button" class="copy-btn" title="コピー">コピー</button>
             </div>
             <div class="output-wrapper">
               <textarea id="enc-cipher" class="mono" rows="4" readonly title="生成された暗号文です。コピーボタンで簡単にクリップボードにコピーできます。"></textarea>
@@ -193,13 +194,13 @@
     </section>
 
     <!-- 復号タブ -->
-    <section id="tab-dec" class="tab-content">
+    <section id="tab-dec" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-dec">
       <div class="card">
         <!-- 入力エリア -->
         <div class="section">
           <div class="section-header">
             <h2>1. 暗号文入力</h2>
-            <button id="dec-sync" class="sync-btn" disabled title="同期するには先に暗号化タブで暗号化を実行してください。">暗号化タブの結果を同期</button>
+            <button id="dec-sync" type="button" class="sync-btn" disabled title="同期するには先に暗号化タブで暗号化を実行してください。">暗号化タブの結果を同期</button>
           </div>
           <textarea id="dec-cipher" class="mono" rows="4" placeholder="暗号文を入力" title="復号したい暗号文を入力してください。縦列転置式暗号で暗号化されたテキストを想定しています。"></textarea>
         </div>
@@ -211,30 +212,30 @@
             <div class="setting-group">
               <h3>鍵の設定</h3>
               <div class="field">
-                <label class="lbl">鍵の使用</label>
+                <span class="lbl">鍵の使用</span>
                 <label><input type="checkbox" id="dec-use-key" checked title="暗号化時に使用した鍵設定と同じ設定を使用して復号します。"> 鍵を使用する</label>
                 <span class="input-hint">※チェックを外すと鍵なし（列の並べ替えなし）で復号</span>
               </div>
               <div id="dec-key-settings">
-                <div class="field">
-                  <label class="lbl">鍵タイプ</label>
+                <div class="field" role="radiogroup" aria-labelledby="dec-keytype-label">
+                  <span class="lbl" id="dec-keytype-label">鍵タイプ</span>
                   <label><input type="radio" name="dec-keytype" value="keyword" checked title="暗号化時に使用したキーワードと同じものを入力してください。"> キーワード</label>
                   <label><input type="radio" name="dec-keytype" value="numeric" title="暗号化時に使用した数列と同じものを入力してください。"> 数列</label>
                 </div>
                 <div class="field key-row" id="dec-keyword-row">
-                  <label class="lbl">キーワード</label>
+                  <label class="lbl" for="dec-keyword">キーワード</label>
                   <input id="dec-keyword" type="text" value="" placeholder="例：ZEBRAS / BALLOON" title="暗号化時に使用したキーワードと完全に同じものを入力してください。大文字小文字は区別されません。" />
                   <span class="input-hint">※英字（A〜Z）だけ。大文字と小文字は区別しない。同じ文字は左の列から若い番号</span>
                 </div>
                 <div class="field key-row hidden" id="dec-numeric-row">
-                  <label class="lbl">鍵数列</label>
+                  <label class="lbl" for="dec-numeric">鍵数列</label>
                   <input id="dec-numeric" type="text" value="" placeholder="1から始まる連続数値を入力 (例: 3 1 4 2 5)" title="暗号化時に使用した数列と完全に同じものを入力してください。順序と数値が正確でないと復号できません。" />
                   <span class="input-hint">※1から列数までを1回ずつ。10列以上は空白かカンマで区切る</span>
                 </div>
               </div>
               <div class="field hidden" id="dec-no-key-settings">
-                <label class="lbl">列数</label>
-                <input id="dec-col-num" type="number" min="2" max="20" value="5" class="w4" title="暗号化時に使用した列数と同じ値を設定してください。" />
+                <label class="lbl" for="dec-col-num">列数</label>
+                <input id="dec-col-num" type="number" inputmode="numeric" min="2" max="20" value="5" class="w4" title="暗号化時に使用した列数と同じ値を設定してください。" />
                 <span class="input-hint">※2～20の範囲で指定</span>
               </div>
             </div>
@@ -250,7 +251,7 @@
                 <label><input type="checkbox" id="dec-complete" checked title="暗号化のときに完全モード（埋字あり）を使った場合はチェックしてください。暗号文の長さは列数の倍数になります。"> 完全（長方形）</label>
               </div>
               <div class="field" id="dec-padding-row">
-                <label class="lbl">埋字（パディング）</label>
+                <label class="lbl" for="dec-padchar">埋字（パディング）</label>
                 <input id="dec-padchar" type="text" value="X" maxlength="1" class="w1" title="暗号化時に使用されたパディング文字と同じものを入力してください。" />
                 <span class="input-hint">※英字1文字のみ</span>
               </div>
@@ -262,8 +263,8 @@
           </div>
 
           <div class="buttons">
-            <button id="dec-run" class="primary" title="設定した条件で復号を実行します。暗号文と鍵の設定が正しい場合のみ有効になります。">復号実行</button>
-            <button id="dec-clear" class="ghost" title="入力された暗号文と復号結果をすべてクリアします。">クリア</button>
+            <button id="dec-run" type="button" class="primary" title="設定した条件で復号を実行します。暗号文と鍵の設定が正しい場合のみ有効になります。">復号実行</button>
+            <button id="dec-clear" type="button" class="ghost" title="入力された暗号文と復号結果をすべてクリアします。">クリア</button>
           </div>
           <div id="dec-error" class="error hidden" aria-live="polite"></div>
           <div id="dec-notice" class="notice hidden" aria-live="polite"></div>
@@ -300,7 +301,7 @@
           <div class="subsection">
             <div class="subsection-header">
               <h3>テキスト出力</h3>
-              <button id="dec-copy" class="copy-btn" title="コピー">コピー</button>
+              <button id="dec-copy" type="button" class="copy-btn" title="コピー">コピー</button>
             </div>
             <div class="output-wrapper">
               <textarea id="dec-plain" class="mono" rows="4" readonly title="復号された平文です。コピーボタンで簡単にクリップボードにコピーできます。"></textarea>
@@ -310,17 +311,9 @@
       </div>
     </section>
 
-    <!-- 二重転置タブ（未実装） -->
-    <section id="tab-double" class="tab-content">
-      <div class="card">
-        <h2>二重転置（未実装）</h2>
-        <p>縦→縦、縦→横の二重転置を可視化予定です。歴史的にはニヒリスト式（縦＋横）も知られています。</p>
-      </div>
-    </section>
-
 
     <!-- 座学タブ -->
-    <section id="tab-study" class="tab-content">
+    <section id="tab-study" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-study">
       <div class="card">
         <h2>📚 縦列転置式暗号とは</h2>
         <div class="study-content">
@@ -500,7 +493,7 @@
                 <li>パディングの除去（完全モードの場合）</li>
               </ol>
               
-              <div style="margin-top: 16px; padding: 12px; background: rgba(106, 166, 255, 0.1); border-left: 3px solid var(--accent); border-radius: 4px;">
+              <div class="note-box">
                 <strong>📘 ceil関数について</strong><br>
                 ceil（シーリング）は天井関数とも呼ばれ、小数点以下を切り上げる数学関数です。<br>
                 例：ceil(3.2) = 4、ceil(5.0) = 5、ceil(2.1) = 3<br>
@@ -582,12 +575,12 @@
   </footer>
 
   <!-- ヘルプモーダル -->
-  <div id="help-modal" class="modal hidden">
+  <div id="help-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="help-title">
     <div class="modal-backdrop" id="modal-backdrop"></div>
     <div class="modal-content">
       <div class="modal-header">
-        <h2>📚 Columnar CipherLab ヘルプ</h2>
-        <button id="modal-close" class="modal-close" title="ヘルプを閉じる">✕</button>
+        <h2 id="help-title">📚 Columnar CipherLab ヘルプ</h2>
+        <button id="modal-close" class="modal-close" type="button" aria-label="ヘルプを閉じる" title="ヘルプを閉じる"><span aria-hidden="true">✕</span></button>
       </div>
       <div class="modal-body">
         <div class="help-section">
