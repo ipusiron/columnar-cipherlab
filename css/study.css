@@ -242,3 +242,26 @@
   border-left: 3px solid var(--accent);
   border-radius: 4px;
 }
+
+/* 関連するツール */
+.related-tools li {
+  margin: 8px 0;
+  line-height: 1.6;
+}
+
+.related-tools a {
+  color: var(--accent);
+}
+
+/* 比較表は狭い幅で枠の中だけ横にスクロールする */
+.table-scroll {
+  overflow-x: auto;
+}
+
+@media (max-width: 600px) {
+  .comparison-table th,
+  .comparison-table td {
+    padding: 6px;
+    overflow-wrap: anywhere;
+  }
+}

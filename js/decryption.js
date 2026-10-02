@@ -1,8 +1,8 @@
 // ===== 復号タブのロジック =====
 
 import { parseKey, validatePadChar, decrypt, stripTrailingPadding, markTrailingPadding, stripWhitespace, displayRank } from './columnar-core.js';
-import { el, renderGrid, showOrderBadges, showMessages, copyToClipboard, showToast } from './utils.js';
-import { t, tr } from './messages.js';
+import { el, renderGrid, showOrderBadges, showMessages, copyToClipboard, showToast, setText } from './utils.js';
+import { t } from './messages.js';
 
 export function initDecryption() {
   window.debugLog('DECRYPT', 'Initializing decryption module');
@@ -15,6 +15,8 @@ export function initDecryption() {
   const decCipher = $('dec-cipher');
   const decKeyword = $('dec-keyword');
   const decNumeric = $('dec-numeric');
+  const decMyszkowski = $('dec-myszkowski');
+  const decMyszRow = $('dec-myszkowski-row');
   const decUseKey = $('dec-use-key');
   const decKeySettings = $('dec-key-settings');
   const decNoKeySettings = $('dec-no-key-settings');
@@ -59,6 +61,7 @@ export function initDecryption() {
       keyType: keyType(),
       keyword: decKeyword.value,
       numeric: decNumeric.value,
+      myszkowski: decMyszkowski.checked,
       columns: decColNum.value,
       complete: decComplete.checked,
       padChar: decPadChar.value,
@@ -88,7 +91,7 @@ export function initDecryption() {
 
   function updateDecryptButtonState() {
     const v = validate(readForm());
-    showMessages(decError, v.errors.filter(e => !isQuiet(e)).map(tr));
+    showMessages(decError, v.errors.filter(e => !isQuiet(e)));
     decRun.disabled = !v.ok;
     return v;
   }
@@ -96,7 +99,7 @@ export function initDecryption() {
   function markStale() {
     if (!hasResult) return;
     resultSections.forEach(s => s.classList.add('is-stale'));
-    decStale.textContent = t('info.stale');
+    setText(decStale, 'info.stale');
     decStale.classList.remove('hidden');
   }
 
@@ -113,15 +116,17 @@ export function initDecryption() {
     decAutoStrip.closest('.field').classList.toggle('hidden', !decComplete.checked);
     const isKeyword = keyType() === 'keyword';
     decKeywordRow.classList.toggle('hidden', !isKeyword);
+    decMyszRow.classList.toggle('hidden', !isKeyword);
     decNumericRow.classList.toggle('hidden', isKeyword);
     updateDecryptButtonState();
   }
 
   refreshForm();
   updateSyncButtonState();
+  document.addEventListener('langchange', updateSyncButtonState);
 
   const onChanged = () => { refreshForm(); markStale(); };
-  [decUseKey, decComplete, decAutoStrip, decIgnoreSpace, ...decKeyTypeInputs].forEach(i => i.addEventListener('change', onChanged));
+  [decUseKey, decComplete, decAutoStrip, decIgnoreSpace, decMyszkowski, ...decKeyTypeInputs].forEach(i => i.addEventListener('change', onChanged));
   [decCipher, decKeyword, decNumeric, decPadChar, decColNum].forEach(i => i.addEventListener('input', onChanged));
 
   // 鍵・埋字・列数の欄で Enter、暗号文欄で Ctrl+Enter を押したら実行する
@@ -204,6 +209,7 @@ export function initDecryption() {
     if (state.useKey && state.keyType) {
       document.querySelector(`input[name="dec-keytype"][value="${state.keyType === 'numeric' ? 'numeric' : 'keyword'}"]`).checked = true;
       decKeyword.value = state.keyType === 'keyword' ? state.keyword || '' : '';
+      decMyszkowski.checked = Boolean(state.myszkowski);
       decNumeric.value = state.keyType === 'numeric' ? state.numeric || '' : '';
     } else if (!state.useKey) {
       decColNum.value = state.colNum || 5;
@@ -225,15 +231,15 @@ export function initDecryption() {
     const form = readForm();
     const v = validate(form);
     if (!v.ok) {
-      showMessages(decError, v.errors.map(tr));
+      showMessages(decError, v.errors);
       return;
     }
     const result = decrypt(v.cipher, v.key, { complete: form.complete });
     if (result.error) {
-      showMessages(decError, [tr(result.error)]);
+      showMessages(decError, [result.error]);
       return;
     }
-    showMessages(decError, v.errors.map(tr));
+    showMessages(decError, v.errors);
     let text = result.text;
     let grid = result.grid;
     const notices = [];
@@ -242,8 +248,8 @@ export function initDecryption() {
       text = stripped.text;
       grid = markTrailingPadding(result.grid, stripped.removed);
       notices.push(stripped.removed
-        ? t('info.padStripped', { pad: form.padChar, count: stripped.removed })
-        : t('info.padKept'));
+        ? { key: 'info.padStripped', params: { pad: form.padChar, count: stripped.removed } }
+        : { key: 'info.padKept' });
     }
     showMessages(decNotice, notices);
 

@@ -205,7 +205,8 @@ test('暗号化の grid は位置で埋字を判定する（平文の X は平�
 
 test('暗号文の区切り（segments）は列ごとの読み出し範囲', () => {
   const e = encrypt('HELLOWORLD', kw('KEY'), { complete: true, padChar: 'X' });
-  assert.deepEqual(e.segments, [{ col: 1, start: 0, length: 4 }, { col: 0, start: 4, length: 4 }, { col: 2, start: 8, length: 4 }]);
+  assert.deepEqual(e.segments.map(({ col, start, length }) => ({ col, start, length })),
+    [{ col: 1, start: 0, length: 4 }, { col: 0, start: 4, length: 4 }, { col: 2, start: 8, length: 4 }]);
   const d = decrypt('EVLNACDTESEAROFODEECWIREE', kw('ZEBRAS'), { complete: false });
   assert.deepEqual(d.heights, [5, 4, 4, 4, 4, 4]);
   assert.deepEqual(d.segments.map(s => s.length), [4, 4, 4, 4, 4, 5]);

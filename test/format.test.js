@@ -7,10 +7,10 @@ const ROOT = new URL('../', import.meta.url);
 const list = dir => readdirSync(new URL(dir, ROOT)).filter(f => /\.(js|css)$/.test(f)).map(f => dir + f);
 const files = [...list('js/'), ...list('css/'), ...list('test/')];
 
-test('JS・CSS・テストの最長行は160文字以下', () => {
+test('JS・CSS・テストの最長行は160文字以下（文言の辞書は1項目1行なので320文字以下）', () => {
   for (const f of files) {
     const longest = Math.max(...readFileSync(new URL(f, ROOT), 'utf8').split('\n').map(l => l.length));
-    assert.ok(longest <= 160, `${f}: ${longest}`);
+    assert.ok(longest <= (f === 'js/messages.js' ? 320 : 160), `${f}: ${longest}`);
   }
 });
 

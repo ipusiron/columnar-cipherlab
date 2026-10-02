@@ -105,11 +105,63 @@ test('ツールチップとヘルプの鍵順の例', () => {
 });
 
 test('README の画像参照が実在し、assets の PNG はすべて README から参照される', () => {
-  const refs = [...readme.matchAll(/\]\((assets\/[^)]+)\)/g)].map(m => m[1]);
-  assert.ok(refs.length >= 3);
+  const refs = [...(readme + readmeEn).matchAll(/\]\((assets\/[^)]+)\)/g)].map(m => m[1]);
+  assert.ok(refs.length >= 9);
   for (const r of refs) assert.ok(existsSync(new URL(r, ROOT)), r);
-  const pngs = readdirSync(new URL('assets/', ROOT)).filter(f => f.endsWith('.png')).map(f => `assets/${f}`);
+  const pngs = [
+    ...readdirSync(new URL('assets/', ROOT)).filter(f => f.endsWith('.png')).map(f => `assets/${f}`),
+    ...readdirSync(new URL('assets/en/', ROOT)).filter(f => f.endsWith('.png')).map(f => `assets/en/${f}`)
+  ];
   for (const f of pngs) assert.ok(refs.includes(f), `参照されていない画像 ${f}`);
+});
+
+// 英語版 README（README.en.md）
+const readmeEn = read('README.en.md');
+const headings = text => text.replace(/```[\s\S]*?```/g, '').split('\n').filter(l => /^#{1,4} /.test(l));
+const shape = h => {
+  const [, hashes, rest] = h.match(/^(#+) (.*)$/);
+  const icon = rest.match(/^([^\sA-Za-z0-9぀-鿿（(]+)\s/);
+  return `${hashes} ${icon ? icon[1] : ''}`;
+};
+
+test('英語版 README は日本語版と同じ見出しの構成で、相互にリンクする', () => {
+  const ja = headings(readme);
+  const en = headings(readmeEn);
+  assert.equal(en.length, ja.length);
+  assert.deepEqual(en.map(shape), ja.map(shape));
+  assert.equal(readmeEn.split('\n')[2], 'English · [日本語](README.md)');
+  assert.ok(readme.includes('[English](README.en.md) · 日本語'));
+  assert.ok(!readmeEn.includes('<!--'), 'YAML は README.md だけに置く');
+  assert.ok(readmeEn.includes('**Day043 - 100 Security Tools with Generative AI**'));
+  assert.ok(readmeEn.includes('https://akademeia.info/?page_id=42163'));
+});
+
+test('英語版 README の例と表も中核ロジックの結果と同じ', () => {
+  const key = parseKeyword('KEY');
+  assert.ok(readmeEn.includes(`Ciphertext: ${group(encrypt('HELLOWORLD', key, { complete: true, padChar: 'X' }).cipher, 4)}`));
+  assert.ok(readmeEn.includes(`Plaintext (with padding): ${group(decrypt('EORXHLODLWLX', key, { complete: true }).text, 3)}`));
+  assert.ok(readmeEn.includes(`ZEBRAS → ${rankText('ZEBRAS')}`));
+  assert.ok(readmeEn.includes(`both give the ciphertext "${encrypt('FO', key, { complete: true, padChar: 'X' }).cipher}"`));
+  const sec = readmeEn.split('## 🎓 Sample presets for learning')[1].split('\n## ')[0];
+  const rows = sec.split('\n').filter(l => /^\| [①-⑤]/.test(l)).map(l => l.split('|').slice(1, -1).map(c => c.trim()));
+  assert.equal(rows.length, presets.length);
+  rows.forEach(([, plain, keyText, cipher], i) => {
+    const p = presets[i];
+    assert.equal(plain, p.plaintext);
+    assert.equal(keyText, p.keyType === 'keyword' ? p.keyword : p.numeric);
+    const k = p.keyType === 'keyword' ? parseKeyword(p.keyword) : parseNumericKey(p.numeric);
+    assert.equal(cipher, encrypt(normalizeText(p.plaintext, p.settings).text, k, { complete: true, padChar: 'X' }).cipher);
+  });
+});
+
+test('英語版 README のディレクトリー構造は日本語版と同じファイルを並べる', () => {
+  const files = text => {
+    const block = text.split(/## 📁 [^\n]+/)[1].match(/```\n([\s\S]*?)```/)[1].trimEnd().split('\n').slice(1);
+    return block.map(l => l.replace(/\s+#.*$/, '').replace(/^[│ ├└─]+/, ''));
+  };
+  assert.deepEqual(files(readmeEn), files(readme));
+  const hashes = new Set(readmeEn.split(/## 📁 [^\n]+/)[1].match(/```\n([\s\S]*?)```/)[1].trimEnd().split('\n').slice(1).map(l => l.indexOf('#')));
+  assert.equal(hashes.size, 1);
 });
 
 // ディレクトリー構造: 全ファイルが載り、全行に説明がある

@@ -55,7 +55,7 @@ test('スクリプトが参照する id は index.html にある', () => {
 test('ラベルの for とタブの aria-controls の行き先がある', () => {
   for (const m of html.matchAll(/<label[^>]*\sfor="([^"]+)"/g)) assert.ok(ids.has(m[1]), m[1]);
   const tabs = [...html.matchAll(/role="tab"[^>]*aria-controls="([^"]+)"/g)].map(m => m[1]);
-  assert.equal(tabs.length, 3);
+  assert.deepEqual(tabs, ['tab-enc', 'tab-dec', 'tab-double', 'tab-lab', 'tab-study']);
   for (const id of tabs) assert.ok(ids.has(id), id);
   assert.equal([...html.matchAll(/role="tabpanel"/g)].length, tabs.length);
   assert.match(html, /id="help-modal"[^>]*role="dialog"[^>]*aria-modal="true"/);
@@ -65,5 +65,5 @@ test('ビューポートと file:// の案内', () => {
   assert.match(html, /<meta name="viewport" content="width=device-width, initial-scale=1.0" \/>/);
   assert.ok(!/user-scalable=no|maximum-scale=1/.test(html));
   assert.ok(ids.has('file-notice'));
-  assert.match(read('js/file-check.js'), /protocol === 'file:'/);
+  assert.match(read('js/file-check.js'), /protocol !== 'file:'/);
 });
