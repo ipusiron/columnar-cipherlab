@@ -1,6 +1,7 @@
 // ===== 縦列転置式暗号の中核ロジック（DOMに依存しない） =====
 // 文言は持たない。エラーや注意は { key, params } で返し、表示の直前に messages.js で訳す。
 // 1マスは1コードポイント（NFCに正規化したあと）として扱う。
+// 鍵は「読み出す列のまとまり（groups）」で表す。標準の縦列転置は1列ずつ、Myszkowski式は同じ文字の列をまとめる。
 
 export const MAX_INPUT_LENGTH = 10000;
 export const MIN_KEY_LENGTH = 2;
@@ -29,23 +30,41 @@ function foldKeyInput(input) {
   return String(input ?? '').normalize('NFKC').replace(/[、､]/g, ',').trim();
 }
 
-function orderFromValues(values) {
+// 列ごとの値（文字か数）から鍵を作る。同じ値は左の列を先にする
+// grouped が真なら、同じ値の列を1つのまとまりにする（Myszkowski式）
+function keyFromValues(values, grouped = false) {
   const entries = values.map((v, i) => ({ v, i }));
   entries.sort((a, b) => (a.v < b.v ? -1 : a.v > b.v ? 1 : a.i - b.i));
-  const order = entries.map(e => e.i);
-  const rank = new Array(values.length);
-  entries.forEach((e, k) => { rank[e.i] = k; });
-  return { order, rank, n: values.length };
+  const groups = [];
+  for (const e of entries) {
+    const last = groups[groups.length - 1];
+    if (grouped && last && values[last[0]] === e.v) last.push(e.i);
+    else groups.push([e.i]);
+  }
+  return keyFromGroups(groups, values.length);
+}
+
+// まとまりの並びから鍵を作る。rank は列ごとのまとまりの順位（0始まり）
+export function keyFromGroups(groups, n) {
+  const rank = new Array(n);
+  groups.forEach((cols, g) => cols.forEach(c => { rank[c] = g; }));
+  return { order: groups.flat(), rank, n, groups: groups.map(cols => cols.slice()) };
+}
+
+// 読み出し順（列の並び）から鍵を作る（解読ラボ・作業台で使う）
+export function keyFromOrder(order) {
+  return { ...keyFromGroups(order.map(c => [c]), order.length), source: order.map(c => c + 1).join(' '), type: 'order' };
 }
 
 // キーワードから列順を決める。大文字小文字は区別しない。同じ文字は左の列を先にする
-export function parseKeyword(input) {
+// myszkowski が真なら、同じ文字の列をまとめて行ごとに読む
+export function parseKeyword(input, { myszkowski = false } = {}) {
   const s = foldKeyInput(input).toUpperCase();
   if (!s) return err('key.keywordEmpty');
   if (!/^[A-Z]+$/.test(s)) return err('key.keywordChars');
   if (s.length < MIN_KEY_LENGTH) return err('key.keywordShort', { min: MIN_KEY_LENGTH });
   if (s.length > MAX_KEY_LENGTH) return err('key.tooLong', { max: MAX_KEY_LENGTH });
-  return { ...orderFromValues([...s]), source: s, type: 'keyword' };
+  return { ...keyFromValues([...s], myszkowski), source: s, type: 'keyword', myszkowski: Boolean(myszkowski) };
 }
 
 // 数列から列順を決める。区切りは空白・カンマ・読点。区切りがなければ1文字ずつ（9列まで）
@@ -67,7 +86,7 @@ export function parseNumericKey(input) {
   for (let i = 1; i <= nums.length; i++) {
     if (!seen.has(i)) return err('key.numericRange', { n: nums.length, missing: i });
   }
-  return { ...orderFromValues(nums), source: nums.join(' '), type: 'numeric' };
+  return { ...keyFromValues(nums), source: nums.join(' '), type: 'numeric' };
 }
 
 // 鍵なし（列を並べ替えない）
@@ -76,19 +95,57 @@ export function parseColumnCount(input) {
   if (!/^\d+$/.test(s)) return err('key.columnsRange', { min: MIN_COLUMNS, max: MAX_COLUMNS });
   const n = Number(s);
   if (n < MIN_COLUMNS || n > MAX_COLUMNS) return err('key.columnsRange', { min: MIN_COLUMNS, max: MAX_COLUMNS });
-  const order = Array.from({ length: n }, (_, i) => i);
-  return { order, rank: order.slice(), n, source: String(n), type: 'none' };
+  return { ...keyFromOrder(Array.from({ length: n }, (_, i) => i)), source: String(n), type: 'none' };
+}
+
+// 鍵の欄の値（キーワードか数列）を見分けて解析する（二重転置タブで使う）
+export function parseAnyKey(input) {
+  return /\d/.test(foldKeyInput(input)) ? parseNumericKey(input) : parseKeyword(input);
 }
 
 // 画面の設定から鍵を作る
-export function parseKey({ useKey = true, keyType = 'keyword', keyword = '', numeric = '', columns = '' } = {}) {
+export function parseKey({ useKey = true, keyType = 'keyword', keyword = '', numeric = '', columns = '', myszkowski = false } = {}) {
   if (!useKey) return parseColumnCount(columns);
-  return keyType === 'numeric' ? parseNumericKey(numeric) : parseKeyword(keyword);
+  return keyType === 'numeric' ? parseNumericKey(numeric) : parseKeyword(keyword, { myszkowski });
 }
 
 // 埋字は英字1文字
 export function validatePadChar(padChar) {
   return /^[A-Za-z]$/.test(String(padChar ?? '')) ? { ok: true } : err('pad.invalid');
+}
+
+// 読み出し順に並べたマスの番号（行優先の通し番号）
+// まとまりごとに、上の行から、まとまりの中は左の列から読む。標準の鍵では列ごとに上から下へ読むのと同じ
+export function readOrder(length, key, complete = true) {
+  const n = key.n;
+  const rows = Math.ceil(length / n);
+  const total = complete ? rows * n : length;
+  const out = [];
+  for (const cols of key.groups) {
+    for (let r = 0; r < rows; r++) {
+      for (const c of cols) {
+        const i = r * n + c;
+        if (i < total) out.push(i);
+      }
+    }
+  }
+  return out;
+}
+
+// 読み出しのまとまりごとの、暗号文の中の範囲
+function segmentsOf(length, key, complete) {
+  const n = key.n;
+  const rows = Math.ceil(length / n);
+  const total = complete ? rows * n : length;
+  const segments = [];
+  let start = 0;
+  for (const cols of key.groups) {
+    let size = 0;
+    for (let r = 0; r < rows; r++) for (const c of cols) if (r * n + c < total) size++;
+    segments.push({ col: cols[0], cols: cols.slice(), start, length: size });
+    start += size;
+  }
+  return segments;
 }
 
 // 暗号化。grid は行×列のセル { ch, kind: 'plain' | 'pad' | 'empty' }
@@ -100,28 +157,16 @@ export function encrypt(text, key, { complete = true, padChar = 'X' } = {}) {
   const n = key.n;
   const rows = Math.ceil(L / n);
   const total = complete ? rows * n : L;
-  const grid = [];
-  for (let r = 0; r < rows; r++) {
-    const row = [];
-    for (let c = 0; c < n; c++) {
-      const i = r * n + c;
-      if (i < L) row.push({ ch: chars[i], kind: 'plain' });
-      else if (i < total) row.push({ ch: padChar, kind: 'pad' });
-      else row.push({ ch: '', kind: 'empty' });
-    }
-    grid.push(row);
+  const cells = [];
+  for (let i = 0; i < rows * n; i++) {
+    if (i < L) cells.push({ ch: chars[i], kind: 'plain' });
+    else if (i < total) cells.push({ ch: padChar, kind: 'pad' });
+    else cells.push({ ch: '', kind: 'empty' });
   }
-  const out = [];
-  const segments = [];
-  for (const col of key.order) {
-    const start = out.length;
-    for (let r = 0; r < rows; r++) {
-      if (grid[r][col].kind !== 'empty') out.push(grid[r][col].ch);
-    }
-    segments.push({ col, start, length: out.length - start });
-  }
+  const grid = Array.from({ length: rows }, (_, r) => cells.slice(r * n, (r + 1) * n));
+  const cipher = readOrder(L, key, complete).map(i => cells[i].ch).join('');
   const endsWithPad = complete && chars[L - 1] === padChar;
-  return { cipher: out.join(''), grid, rows, n, length: L, padCount: total - L, segments, endsWithPad };
+  return { cipher, grid, rows, n, length: L, padCount: total - L, segments: segmentsOf(L, key, complete), endsWithPad };
 }
 
 // 列ごとの高さ（元の列順）。不完全では左から余りの本数だけ1行長い
@@ -142,30 +187,28 @@ export function decrypt(cipher, key, { complete = true } = {}) {
     return err('dec.notMultiple', { length: L, n, shorter, longer: shorter + n });
   }
   const rows = Math.ceil(L / n);
-  const heights = columnHeights(L, n, complete);
-  const cols = new Array(n);
-  const segments = [];
-  let p = 0;
-  for (const col of key.order) {
-    cols[col] = chars.slice(p, p + heights[col]);
-    segments.push({ col, start: p, length: heights[col] });
-    p += heights[col];
-  }
-  const grid = [];
-  const out = [];
-  for (let r = 0; r < rows; r++) {
-    const row = [];
-    for (let c = 0; c < n; c++) {
-      if (r < cols[c].length) {
-        out.push(cols[c][r]);
-        row.push({ ch: cols[c][r], kind: 'plain' });
-      } else {
-        row.push({ ch: '', kind: 'empty' });
-      }
-    }
-    grid.push(row);
-  }
-  return { text: out.join(''), grid, rows, n, length: L, heights, segments };
+  const out = new Array(L);
+  readOrder(L, key, complete).forEach((pos, k) => { out[pos] = chars[k]; });
+  const grid = Array.from({ length: rows }, (_, r) => Array.from({ length: n }, (_, c) => {
+    const i = r * n + c;
+    return i < L ? { ch: out[i], kind: 'plain' } : { ch: '', kind: 'empty' };
+  }));
+  return { text: out.join(''), grid, rows, n, length: L, heights: columnHeights(L, n, complete), segments: segmentsOf(L, key, complete) };
+}
+
+// 二重転置。1段目の暗号文を2段目の鍵でもう一度転置する（どちらも埋字なし）
+export function encryptDouble(text, key1, key2) {
+  const first = encrypt(text, key1, { complete: false });
+  if (first.error) return first;
+  const second = encrypt(first.cipher, key2, { complete: false });
+  return { first, second, cipher: second.cipher };
+}
+
+export function decryptDouble(cipher, key1, key2) {
+  const second = decrypt(cipher, key2, { complete: false });
+  if (second.error) return second;
+  const first = decrypt(second.text, key1, { complete: false });
+  return { second, first, text: first.text };
 }
 
 // 末尾の埋字を除く。埋字は最大でも「列数−1」文字なので、それより多くは除かない
@@ -193,7 +236,7 @@ export function stripWhitespace(text) {
   return String(text ?? '').replace(/\s+/gu, '');
 }
 
-// 列順を「列ごとの読み出し順位（1始まり）」として返す
+// 列ごとの読み出し順位（1始まり）。Myszkowski式では同じ文字の列が同じ順位になる
 export function displayRank(key) {
   return key.rank.map(r => r + 1);
 }

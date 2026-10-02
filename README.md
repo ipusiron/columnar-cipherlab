@@ -498,7 +498,8 @@ columnar-cipherlab/
 │   ├── format.test.js      # ファイルの形式（行の長さ・行数）
 │   ├── html.test.js        # index.htmlの静的検証
 │   ├── messages.test.js    # 文言のキーと直書きの検査
-│   └── readme.test.js      # README・座学タブの例の検算
+│   ├── readme.test.js      # README・座学タブの例の検算
+│   └── variants.test.js    # Myszkowski式・二重転置の既知解答と往復
 ├── .gitignore              # Gitの除外設定
 ├── .nojekyll               # GitHub PagesでJekyllを使わない指定
 ├── CLAUDE.md               # Claude Code向けの開発メモ
