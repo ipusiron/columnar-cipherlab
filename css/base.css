@@ -252,3 +252,20 @@ button.disabled, button:disabled {
 .boot-notice a {
   color: var(--accent);
 }
+
+/* 選択欄（鍵長など） */
+select {
+  min-height: 44px;
+  min-width: 4.5rem;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 16px;
+  color: var(--fg);
+  background: #0f1420;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+:root[data-theme="light"] select {
+  background: #ffffff;
+}

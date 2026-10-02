@@ -4,6 +4,7 @@ import { MAX_INPUT_LENGTH, normalizeText, parseKey, validatePadChar, encrypt, re
 import { el, renderGrid, showOrderBadges, showMessages, copyToClipboard } from './utils.js';
 import { t, tr } from './messages.js';
 import { loadPresets, getPresetById } from './presets.js';
+import { buildShareHash } from './share.js';
 
 const emptyState = () => ({
   cipher: null,
@@ -62,6 +63,7 @@ export function initEncryption() {
   const encReorderedSection = $('enc-reordered-section');
   const encReorderedGrid = $('enc-reordered-grid');
   const encCipherDisplay = $('enc-cipher-display');
+  const encShareUrl = $('enc-share-url');
   const resultSections = [encIntermediateSection, encVisualSection, encResultSection];
 
   // 直前の暗号化の結果（並べ替えとハイライトで使う）
@@ -328,6 +330,20 @@ export function initEncryption() {
     if (encCipher.value) copyToClipboard(encCipher.value, encCopyBtn, encCipher);
   });
 
+  // 共有リンク（平文は含めない）
+  function share(withKey, button) {
+    const s = window.encryptionState;
+    if (!s || !s.cipher) return;
+    const keyType = s.useKey ? s.keyType : 'none';
+    const key = keyType === 'keyword' ? s.keyword : keyType === 'numeric' ? s.numeric : String(s.colNum);
+    const hash = buildShareHash({ cipher: s.cipher, complete: s.complete, withKey, keyType, key, myszkowski: s.myszkowski, padChar: s.padChar });
+    encShareUrl.value = window.location.href.split('#')[0] + hash;
+    encShareUrl.classList.remove('hidden');
+    copyToClipboard(encShareUrl.value, button, encShareUrl);
+  }
+  $('enc-share-problem').addEventListener('click', e => share(false, e.currentTarget));
+  $('enc-share-answer').addEventListener('click', e => share(true, e.currentTarget));
+
   // 暗号化を実行する
   function run() {
     const form = readForm();
@@ -363,6 +379,8 @@ export function initEncryption() {
     encReorderedSection.classList.add('hidden');
     renderCipherDisplay(result);
     encCipher.value = result.cipher;
+    encShareUrl.value = '';
+    encShareUrl.classList.add('hidden');
     resultSections.forEach(s => s.classList.remove('hidden'));
 
     window.encryptionState = {

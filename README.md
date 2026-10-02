@@ -488,9 +488,12 @@ columnar-cipherlab/
 │   ├── english-stats.js    # 英語の2文字の組と文字の頻度（生成物）
 │   ├── file-check.js       # file://で開いたときの案内
 │   ├── help.js             # ヘルプのダイアログ
+│   ├── lab.js              # 解読ラボタブの画面処理（総当たり・作業台）
 │   ├── main.js             # エントリーポイント
 │   ├── messages.js         # 画面に出す文言
 │   ├── presets.js          # プリセットの読み込み
+│   ├── share.js            # 共有リンクの組み立てと検証（平文は含めない）
+│   ├── solver-worker.js    # 総当たりを別スレッドで実行するWeb Worker
 │   ├── tabs.js             # タブの切り替え
 │   ├── theme-init.js       # 読み込み前のテーマの適用
 │   ├── theme.js            # テーマの切り替え
@@ -502,6 +505,7 @@ columnar-cipherlab/
 │   ├── html.test.js        # index.htmlの静的検証
 │   ├── messages.test.js    # 文言のキーと直書きの検査
 │   ├── readme.test.js      # README・座学タブの例の検算
+│   ├── share.test.js       # 共有リンクの往復と検証
 │   ├── solver.test.js      # 解読ラボの総当たり・見分け方・色分け
 │   └── variants.test.js    # Myszkowski式・二重転置の既知解答と往復
 ├── .gitignore              # Gitの除外設定

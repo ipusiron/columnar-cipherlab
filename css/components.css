@@ -443,3 +443,116 @@
   margin: 8px 0 16px;
   word-break: break-all;
 }
+
+/* 共有リンク */
+.share-url {
+  margin-top: 12px;
+}
+
+/* 解読ラボ */
+.lab-info ul {
+  margin: 12px 0 0;
+  padding-left: 1.2em;
+  line-height: 1.7;
+}
+
+.lab-info a {
+  color: var(--accent);
+}
+
+.lab-progress {
+  margin: 12px 0 0;
+  font-size: 0.95rem;
+}
+
+#lab-results.is-stale {
+  border-left: 4px dashed var(--accent);
+  padding-left: 8px;
+}
+
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.result-table th,
+.result-table td {
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.result-table th {
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.result-table .preview {
+  word-break: break-all;
+  min-width: 12em;
+}
+
+.result-table .actions {
+  white-space: nowrap;
+}
+
+.small-btn {
+  padding: 6px 10px;
+  margin: 2px;
+  font-size: 0.9rem;
+}
+
+/* 作業台 */
+.bench-cols {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.bench-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.bench-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.bench-pairs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.pair {
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+
+.pair-good {
+  border-color: #16a34a;
+  border-left-width: 4px;
+}
+
+.pair-bad {
+  border-color: var(--danger);
+  border-left-width: 4px;
+  border-style: dashed;
+}
+
+.result-table td.mono {
+  white-space: nowrap;
+}

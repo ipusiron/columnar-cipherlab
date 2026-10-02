@@ -47,6 +47,7 @@
       <button class="tab-button active" type="button" role="tab" id="tabbtn-enc" data-tab="enc" aria-controls="tab-enc" aria-selected="true">暗号化</button>
       <button class="tab-button" type="button" role="tab" id="tabbtn-dec" data-tab="dec" aria-controls="tab-dec" aria-selected="false" tabindex="-1">復号</button>
       <button class="tab-button" type="button" role="tab" id="tabbtn-double" data-tab="double" aria-controls="tab-double" aria-selected="false" tabindex="-1">二重転置</button>
+      <button class="tab-button" type="button" role="tab" id="tabbtn-lab" data-tab="lab" aria-controls="tab-lab" aria-selected="false" tabindex="-1">解読ラボ</button>
       <button class="tab-button" type="button" role="tab" id="tabbtn-study" data-tab="study" aria-controls="tab-study" aria-selected="false" tabindex="-1">座学</button>
     </div>
 
@@ -205,6 +206,18 @@
               <textarea id="enc-cipher" class="mono" rows="4" readonly title="生成された暗号文です。コピーボタンで簡単にクリップボードにコピーできます。"></textarea>
             </div>
           </div>
+
+          <!-- 共有 -->
+          <div class="subsection">
+            <h3>共有リンク</h3>
+            <p class="section-note">平文はリンクに含めません。「問題として共有」は暗号文とモードだけ、「解答つきで共有」は鍵も含めます。リンクは「#」より後ろに書くので、開いたときにサーバーへは送られません。</p>
+            <div class="buttons">
+              <button id="enc-share-problem" class="secondary" type="button">問題として共有</button>
+              <button id="enc-share-answer" class="secondary" type="button">解答つきで共有</button>
+            </div>
+            <label class="visually-hidden" for="enc-share-url">共有リンク</label>
+            <input id="enc-share-url" class="share-url hidden" type="text" readonly />
+          </div>
         </div>
       </div>
     </section>
@@ -290,6 +303,7 @@
           <div id="dec-error" class="error hidden" aria-live="polite"></div>
           <div id="dec-notice" class="notice hidden" aria-live="polite"></div>
           <p id="dec-stale" class="stale-note hidden" role="status"></p>
+          <p id="dec-share-note" class="notice hidden" role="status"></p>
         </div>
 
         <!-- 可視化エリア -->
@@ -407,6 +421,92 @@
               <label class="visually-hidden" for="dbl-output">結果</label>
               <textarea id="dbl-output" class="mono" rows="3" readonly></textarea>
             </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 解読ラボタブ -->
+    <section id="tab-lab" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-lab">
+      <div class="card">
+        <div class="section">
+          <div class="section-header">
+            <h2>1. 鍵のわからない暗号文</h2>
+            <button id="lab-sample" class="sample-btn" type="button" title="例題の暗号文を入れます（英文の一節を、ある鍵で不完全モードの縦列転置にしたもの）。">例題</button>
+          </div>
+          <p id="lab-share-note" class="notice hidden" role="status"></p>
+          <label class="visually-hidden" for="lab-cipher">解読する暗号文</label>
+          <textarea id="lab-cipher" class="mono" rows="4" placeholder="解読する暗号文（英文を縦列転置したもの）"></textarea>
+          <div class="field">
+            <span class="lbl">空白</span>
+            <label><input type="checkbox" id="lab-ignore-space" checked> 暗号文の空白・改行を無視</label>
+          </div>
+          <div id="lab-info" class="lab-info" aria-live="polite"></div>
+        </div>
+
+        <div class="section">
+          <h2>2. 総当たり</h2>
+          <p class="section-note">鍵長ごとに、列の並べ方をすべて試して復号し、英字の隣り合う2文字の組がどれだけ英語らしいかで順位を付けます。鍵長8までなら全部の並べ方（8列で40,320通り）を試せます。</p>
+          <div class="settings-grid">
+            <div class="setting-group">
+              <h3>範囲</h3>
+              <div class="field">
+                <label class="lbl" for="lab-min">鍵長（最小）</label>
+                <select id="lab-min"></select>
+              </div>
+              <div class="field">
+                <label class="lbl" for="lab-max">鍵長（最大）</label>
+                <select id="lab-max"></select>
+              </div>
+              <div class="field">
+                <span class="lbl">モード</span>
+                <label><input type="checkbox" id="lab-complete-only"> 完全モードだけ（長さが鍵長の倍数）</label>
+              </div>
+            </div>
+            <div class="setting-group">
+              <h3>手がかり</h3>
+              <div class="field">
+                <label class="lbl" for="lab-crib">既知の単語</label>
+                <input id="lab-crib" type="text" placeholder="例：DAWN" />
+                <span class="input-hint">※平文に入っているとわかっている単語。入れると、その単語を含む候補だけを残す</span>
+              </div>
+            </div>
+          </div>
+          <div class="buttons">
+            <button id="lab-run" class="primary" type="button">総当たりを実行</button>
+            <button id="lab-cancel" class="ghost hidden" type="button">中止</button>
+          </div>
+          <div id="lab-error" class="error hidden" aria-live="polite"></div>
+          <p id="lab-progress" class="lab-progress hidden" role="status"></p>
+          <div id="lab-results" class="hidden">
+            <h3>候補（英語らしい順）</h3>
+            <div class="gridwrap">
+              <table class="result-table">
+                <thead>
+                  <tr><th scope="col">順位</th><th scope="col">鍵長</th><th scope="col">鍵（数列）</th><th scope="col">英語らしさ</th><th scope="col">復号した文（先頭）</th><th scope="col">操作</th></tr>
+                </thead>
+                <tbody id="lab-results-body"></tbody>
+              </table>
+            </div>
+            <p class="section-note">英語らしさは、英字の隣り合う2文字の組の log10 確率（100倍）の平均です。0に近いほど英語らしい値です。</p>
+          </div>
+        </div>
+
+        <div class="section" id="lab-bench-section">
+          <h2>3. 手で解く作業台</h2>
+          <p class="section-note">暗号文を鍵長の数の列に書き、列を左右に入れ替えて、行に英語が読めるかを確かめます（多重アナグラム法の手作業版）。隣り合う2列の組が英語らしいかを、列の間の印で示します。</p>
+          <div class="field">
+            <label class="lbl" for="lab-bench-n">鍵長</label>
+            <select id="lab-bench-n"></select>
+            <button id="lab-bench-reset" class="ghost" type="button">左から順に戻す</button>
+          </div>
+          <div id="lab-bench-cols" class="bench-cols" role="group" aria-label="列の並べ替え"></div>
+          <div id="lab-bench-pairs" class="bench-pairs" aria-live="polite"></div>
+          <div id="lab-bench-grid" class="gridwrap"></div>
+          <p class="mono dbl-text"><span>鍵（数列）</span>：<span id="lab-bench-key"></span></p>
+          <p class="mono dbl-text"><span>復号した文</span>：<span id="lab-bench-text"></span></p>
+          <div class="buttons">
+            <button id="lab-bench-send" class="secondary" type="button">この鍵で復号タブへ</button>
           </div>
         </div>
       </div>
@@ -617,6 +717,19 @@
               <li>本ツールは、平文の最後の文字が埋字と同じときに、暗号化の時点で知らせる</li>
               <li>復号では除いた埋字の数を表示し、表の中で埋字のセルを色分けする</li>
               <li>実際の運用では、平文に出にくい文字や、意味のない文字（ヌル）を混ぜて埋めることがある</li>
+            </ul>
+          </section>
+
+          <section class="study-section">
+            <h3>関連するツール</h3>
+            <p>「生成AIで作るセキュリティツール100」のほかのツールと組み合わせると、転置式暗号の性質が見えやすくなります。</p>
+            <ul class="related-tools">
+              <li><a href="https://ipusiron.github.io/frequency-analyzer/" target="_blank" rel="noopener noreferrer">Frequency Analyzer（Day009）</a>：文字の頻度を数え、転置式（頻度は平文と同じ）と換字式を見分ける</li>
+              <li><a href="https://ipusiron.github.io/scytale-cipher-visualizer/" target="_blank" rel="noopener noreferrer">Scytale Cipher Visualizer（Day010）</a>：棒に巻いて書く古代の転置と、表に書く転置を比べる</li>
+              <li><a href="https://ipusiron.github.io/vigenere-cipher-tool/" target="_blank" rel="noopener noreferrer">Vigenere Cipher Tool（Day017）</a>：同じ平文を換字式で暗号化し、頻度の変わり方を比べる</li>
+              <li><a href="https://ipusiron.github.io/grille-cipherlab/" target="_blank" rel="noopener noreferrer">Grille CipherLab（Day024）</a>：穴あきの型紙を回して並べ替える、別の転置式</li>
+              <li><a href="https://ipusiron.github.io/railfence-cipherlab/" target="_blank" rel="noopener noreferrer">RailFence CipherLab（Day034）</a>：ジグザグに書く転置。総当たりと見分け方の考え方も同じ</li>
+              <li><a href="https://ipusiron.github.io/anagram-hunter/" target="_blank" rel="noopener noreferrer">Anagram Hunter（Day045）</a>：アナグラム（並べ替え語）を探す。転置の解読のアナグラム攻撃につながる</li>
             </ul>
           </section>
 
