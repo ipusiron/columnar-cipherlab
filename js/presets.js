@@ -1,5 +1,7 @@
 // プリセット管理モジュール
 
+import { t } from './messages.js';
+
 let cachedPresets = null;
 
 /**
@@ -26,11 +28,13 @@ export async function loadPresets() {
       throw new Error('Invalid presets data structure');
     }
     
-    // 各プリセットの必須フィールドを検証
+    // 各プリセットの必須フィールドと型を検証
+    const isText = v => typeof v === 'string' && v.length > 0;
     for (const preset of data.presets) {
-      if (!preset.id || !preset.name || !preset.plaintext || !preset.keyType) {
-        throw new Error(`Invalid preset data: missing required fields in preset ${preset.id || 'unknown'}`);
-      }
+      const ok = isText(preset.id) && isText(preset.name) && isText(preset.plaintext) &&
+        (preset.keyType === 'keyword' || preset.keyType === 'numeric') &&
+        preset.settings && typeof preset.settings === 'object';
+      if (!ok) throw new Error(`Invalid preset data: ${typeof preset.id === 'string' ? preset.id : 'unknown'}`);
     }
     
     cachedPresets = data;
@@ -45,8 +49,8 @@ export async function loadPresets() {
       presets: [
         {
           id: "1",
-          name: "①マザーグース（フォールバック）",
-          description: "デフォルトサンプル",
+          name: t('preset.fallbackName'),
+          description: t('preset.fallbackDescription'),
           plaintext: "Who killed Cock Robin? I, said the Sparrow,",
           keyType: "keyword",
           keyword: "MOTHER",
@@ -78,21 +82,4 @@ export async function loadPresets() {
 export async function getPresetById(presetId) {
   const data = await loadPresets();
   return data.presets.find(preset => preset.id === presetId) || null;
-}
-
-/**
- * 全プリセットのリストを取得
- * @returns {Promise<Array>} プリセットのリスト
- */
-export async function getAllPresets() {
-  const data = await loadPresets();
-  return data.presets;
-}
-
-/**
- * プリセットキャッシュをクリア（開発用）
- */
-export function clearPresetCache() {
-  cachedPresets = null;
-  window.debugLog('PRESETS', '🗑️ Preset cache cleared');
 }

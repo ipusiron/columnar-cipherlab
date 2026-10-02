@@ -1,45 +1,51 @@
 // ヘルプモーダル機能
+// 開いたら閉じるボタンへフォーカスを移し、Tab はダイアログの中で回す。閉じたら開いたボタンへ戻す
 
 export function initHelp() {
   const helpButton = document.getElementById('help-button');
   const helpModal = document.getElementById('help-modal');
   const modalClose = document.getElementById('modal-close');
   const modalBackdrop = document.getElementById('modal-backdrop');
-  
-  window.debugLog('HELP', '🔧 Setting up help modal event listeners...');
-  
-  // ヘルプボタンクリックでモーダル表示
-  helpButton.addEventListener('click', () => {
-    window.debugLog('HELP', '📖 Opening help modal');
+  const modalBody = helpModal.querySelector('.modal-body');
+  let opener = null;
+
+  // 本文がスクロールするのでキーボードでも動かせるようにする
+  modalBody.tabIndex = 0;
+
+  function openModal() {
+    opener = document.activeElement;
     helpModal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden'; // 背景スクロール防止
-  });
-  
-  // 閉じるボタンでモーダルを閉じる
-  modalClose.addEventListener('click', () => {
-    window.debugLog('HELP', '❌ Closing help modal (close button)');
-    closeModal();
-  });
-  
-  // 背景クリックでモーダルを閉じる
-  modalBackdrop.addEventListener('click', () => {
-    window.debugLog('HELP', '🖱️ Closing help modal (background click)');
-    closeModal();
-  });
-  
-  // ESCキーでモーダルを閉じる
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !helpModal.classList.contains('hidden')) {
-      window.debugLog('HELP', '⌨️ Closing help modal (ESC key)');
-      closeModal();
-    }
-  });
-  
+    document.body.classList.add('modal-open'); // 背景スクロール防止
+    modalClose.focus();
+  }
+
   function closeModal() {
     helpModal.classList.add('hidden');
-    document.body.style.overflow = ''; // スクロール復活
-    window.debugLog('HELP', '✅ Help modal closed');
+    document.body.classList.remove('modal-open');
+    if (opener && typeof opener.focus === 'function') opener.focus();
   }
-  
-  window.debugLog('HELP', '✅ Help modal event listeners configured');
+
+  helpButton.addEventListener('click', openModal);
+  modalClose.addEventListener('click', closeModal);
+  modalBackdrop.addEventListener('click', closeModal);
+
+  helpModal.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeModal();
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    const focusable = [...helpModal.querySelectorAll('button, [href], [tabindex]:not([tabindex="-1"])')]
+      .filter(n => !n.disabled && n.offsetParent !== null);
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  });
 }

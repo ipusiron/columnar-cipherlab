@@ -6,11 +6,11 @@ import { initDecryption } from './decryption.js';
 import { initTheme } from './theme.js';
 import { initHelp } from './help.js';
 
-// デバッグ用ログ関数
+// デバッグ用ログ関数。URL に ?debug=1 を付けたときだけ出す（入力した文はどの場合も出さない）
+const DEBUG = new URLSearchParams(window.location.search).get('debug') === '1';
 function debugLog(module, message, data = null) {
-  const timestamp = new Date().toLocaleTimeString();
-  const prefix = `[${timestamp}] [${module}]`;
-  
+  if (!DEBUG) return;
+  const prefix = `[${new Date().toLocaleTimeString()}] [${module}]`;
   if (data) {
     console.log(`${prefix} ${message}`, data);
   } else {
@@ -21,44 +21,21 @@ function debugLog(module, message, data = null) {
 // グローバルからアクセス可能にする
 window.debugLog = debugLog;
 
-// DOMContentLoadedイベントで初期化
+// DOMContentLoadedイベントで初期化。1つが失敗しても、ほかの機能は動かす
 document.addEventListener('DOMContentLoaded', () => {
-  debugLog('MAIN', '🚀 Starting Columnar CipherLab initialization...');
-  
-  try {
-    // 各モジュールの初期化
-    debugLog('MAIN', '🎨 Initializing theme system...');
-    initTheme();
-    debugLog('MAIN', '✅ Theme system initialized');
-    
-    debugLog('MAIN', '❓ Initializing help system...');
-    initHelp();
-    debugLog('MAIN', '✅ Help system initialized');
-    
-    debugLog('MAIN', '📑 Initializing tab system...');
-    initTabs();
-    debugLog('MAIN', '✅ Tab system initialized');
-    
-    debugLog('MAIN', '🔒 Initializing encryption module...');
-    initEncryption();
-    debugLog('MAIN', '✅ Encryption module initialized');
-    
-    debugLog('MAIN', '🔓 Initializing decryption module...');
-    initDecryption();
-    debugLog('MAIN', '✅ Decryption module initialized');
-    
-    debugLog('MAIN', '🎉 All modules initialized successfully!');
-    
-    // 環境情報をログ出力
-    debugLog('MAIN', '🌍 Environment info:', {
-      userAgent: navigator.userAgent,
-      language: navigator.language,
-      viewport: `${window.innerWidth}x${window.innerHeight}`,
-      theme: document.documentElement.getAttribute('data-theme') || 'dark'
-    });
-    
-  } catch (error) {
-    debugLog('MAIN', '❌ Initialization failed:', error);
-    console.error('Failed to initialize Columnar CipherLab:', error);
+  const steps = [
+    ['theme', initTheme],
+    ['help', initHelp],
+    ['tabs', initTabs],
+    ['encryption', initEncryption],
+    ['decryption', initDecryption]
+  ];
+  for (const [name, init] of steps) {
+    try {
+      init();
+      debugLog('MAIN', `${name} initialized`);
+    } catch (error) {
+      console.error(`Failed to initialize ${name}:`, error);
+    }
   }
 });
