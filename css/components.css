@@ -429,3 +429,17 @@
     min-width: min(250px, calc(100vw - 48px));
   }
 }
+
+/* 節の説明文 */
+.section-note {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* 二重転置の途中の文 */
+.dbl-text {
+  margin: 8px 0 16px;
+  word-break: break-all;
+}

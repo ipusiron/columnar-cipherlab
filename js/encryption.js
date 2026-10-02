@@ -10,6 +10,7 @@ const emptyState = () => ({
   keyType: null,
   keyword: null,
   numeric: null,
+  myszkowski: false,
   useKey: true,
   complete: true,
   padChar: 'X',
@@ -27,6 +28,8 @@ export function initEncryption() {
   const encPlain = $('enc-plain');
   const encKeyword = $('enc-keyword');
   const encNumeric = $('enc-numeric');
+  const encMyszkowski = $('enc-myszkowski');
+  const encMyszRow = $('enc-myszkowski-row');
   const encUseKey = $('enc-use-key');
   const encKeySettings = $('enc-key-settings');
   const encNoKeySettings = $('enc-no-key-settings');
@@ -77,6 +80,7 @@ export function initEncryption() {
       keyType: keyType(),
       keyword: encKeyword.value,
       numeric: encNumeric.value,
+      myszkowski: encMyszkowski.checked,
       columns: encColNum.value,
       complete: encComplete.checked,
       padChar: encPadChar.value,
@@ -144,6 +148,7 @@ export function initEncryption() {
   function updateKeyTypeRows() {
     const isKeyword = keyType() === 'keyword';
     encKeywordRow.classList.toggle('hidden', !isKeyword);
+    encMyszRow.classList.toggle('hidden', !isKeyword);
     encNumericRow.classList.toggle('hidden', isKeyword);
   }
 
@@ -159,6 +164,7 @@ export function initEncryption() {
   encUseKey.addEventListener('change', () => { refreshForm(); markStale(); });
   encKeyTypeInputs.forEach(r => r.addEventListener('change', () => { refreshForm(); markStale(); }));
   encComplete.addEventListener('change', () => { refreshForm(); markStale(); });
+  encMyszkowski.addEventListener('change', () => { refreshForm(); markStale(); });
   [encStrip, encStripSymbol, encUpper].forEach(c => c.addEventListener('change', onInputChanged));
   [encPlain, encKeyword, encNumeric, encPadChar, encColNum].forEach(i => i.addEventListener('input', onInputChanged));
 
@@ -198,6 +204,7 @@ export function initEncryption() {
     encStrip.checked = s.stripSpace;
     encStripSymbol.checked = s.stripSymbol;
     encUpper.checked = s.uppercase;
+    encMyszkowski.checked = Boolean(s.myszkowski);
     if (s.colNum && !s.useKey) encColNum.value = s.colNum;
     refreshForm();
     markStale();
@@ -223,28 +230,30 @@ export function initEncryption() {
     if (e.key === 'ArrowUp') { e.preventDefault(); items[(i - 1 + items.length) % items.length]?.focus(); }
   });
 
-  // 列の対応のハイライト（pos は読み出しの順位、0始まり）
+  // 列の対応のハイライト（pos は読み出しのまとまりの順位、0始まり。標準の鍵では1列ずつ）
   function highlight(pos, cls) {
     document.querySelectorAll(`#tab-enc .${cls}`).forEach(n => n.classList.remove(cls));
     if (!current || pos < 0) return;
-    const origCol = current.key.order[pos];
-    encGridDiv.querySelectorAll(`[data-col="${origCol}"]`).forEach(n => n.classList.add(cls));
-    encReorderedGrid.querySelectorAll(`[data-col="${pos}"]`).forEach(n => n.classList.add(cls));
+    const key = current.key;
+    for (const col of key.groups[pos]) {
+      encGridDiv.querySelectorAll(`[data-col="${col}"]`).forEach(n => n.classList.add(cls));
+      encReorderedGrid.querySelectorAll(`[data-col="${key.order.indexOf(col)}"]`).forEach(n => n.classList.add(cls));
+    }
     encCipherDisplay.querySelectorAll(`[data-seg="${pos}"]`).forEach(n => n.classList.add(cls));
   }
+
+  // 元の表の列 → 読み出し順位／並べ替えた表の列 → 読み出し順位
+  const posFromOriginal = node => current.key.rank[Number(node.dataset.col)];
+  const posFromReordered = node => current.key.rank[current.key.order[Number(node.dataset.col)]];
 
   function select(pos) {
     selectedPos = selectedPos === pos ? -1 : pos;
     highlight(selectedPos, 'column-highlight');
     document.querySelectorAll('#tab-enc .col-btn').forEach(b => {
-      const p = b.closest('#enc-grid') ? current.key.rank[Number(b.dataset.col)] : Number(b.dataset.col);
+      const p = b.closest('#enc-grid') ? posFromOriginal(b) : posFromReordered(b);
       b.setAttribute('aria-pressed', String(p === selectedPos));
     });
   }
-
-  // 元の表の列 → 読み出し順位
-  const posFromOriginal = node => current.key.rank[Number(node.dataset.col)];
-  const posFromReordered = node => Number(node.dataset.col);
 
   function bindHighlight(container, toPos) {
     container.addEventListener('mouseover', e => {
@@ -308,7 +317,7 @@ export function initEncryption() {
   // 鍵順に並び替えた表を出す
   encReorderBtn.addEventListener('click', () => {
     if (!current) return;
-    const ranks = Array.from({ length: current.key.n }, (_, i) => i + 1);
+    const ranks = current.key.order.map(c => current.key.rank[c] + 1);
     renderGrid(encReorderedGrid, reorderGrid(current.result.grid, current.key), { ranks, colButtons: true });
     encReorderedSection.classList.remove('hidden');
     highlight(selectedPos, 'column-highlight');
@@ -361,6 +370,7 @@ export function initEncryption() {
       keyType: form.useKey ? form.keyType : null,
       keyword: form.useKey && form.keyType === 'keyword' ? form.keyword.trim() : null,
       numeric: form.useKey && form.keyType === 'numeric' ? form.numeric.trim() : null,
+      myszkowski: form.useKey && form.keyType === 'keyword' && form.myszkowski,
       useKey: form.useKey,
       complete: form.complete,
       padChar,

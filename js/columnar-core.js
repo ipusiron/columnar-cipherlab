@@ -100,7 +100,9 @@ export function parseColumnCount(input) {
 
 // 鍵の欄の値（キーワードか数列）を見分けて解析する（二重転置タブで使う）
 export function parseAnyKey(input) {
-  return /\d/.test(foldKeyInput(input)) ? parseNumericKey(input) : parseKeyword(input);
+  const s = foldKeyInput(input);
+  if (/\d/.test(s) && /[A-Za-z]/.test(s)) return err('key.mixed');
+  return /\d/.test(s) ? parseNumericKey(input) : parseKeyword(input);
 }
 
 // 画面の設定から鍵を作る

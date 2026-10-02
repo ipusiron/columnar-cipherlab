@@ -46,6 +46,7 @@
     <div class="tabs" role="tablist" aria-label="機能">
       <button class="tab-button active" type="button" role="tab" id="tabbtn-enc" data-tab="enc" aria-controls="tab-enc" aria-selected="true">暗号化</button>
       <button class="tab-button" type="button" role="tab" id="tabbtn-dec" data-tab="dec" aria-controls="tab-dec" aria-selected="false" tabindex="-1">復号</button>
+      <button class="tab-button" type="button" role="tab" id="tabbtn-double" data-tab="double" aria-controls="tab-double" aria-selected="false" tabindex="-1">二重転置</button>
       <button class="tab-button" type="button" role="tab" id="tabbtn-study" data-tab="study" aria-controls="tab-study" aria-selected="false" tabindex="-1">座学</button>
     </div>
 
@@ -89,6 +90,11 @@
                   <label class="lbl" for="enc-keyword">キーワード</label>
                   <input id="enc-keyword" type="text" value="" placeholder="例：ZEBRAS / BALLOON" title="英字だけの単語を入力してください。アルファベット順で列順序が決まります。大文字と小文字は区別しません。" />
                   <span class="input-hint">※英字（A〜Z）だけ。大文字と小文字は区別しない。同じ文字は左の列から若い番号</span>
+                </div>
+                <div class="field" id="enc-myszkowski-row">
+                  <span class="lbl">同じ文字</span>
+                  <label><input type="checkbox" id="enc-myszkowski" title="キーワードに同じ文字があるとき、その列をまとめて行ごとに左から読みます（Myszkowski式）。"> Myszkowski式（同じ文字の列をまとめて読む）</label>
+                  <span class="input-hint">※外すと、同じ文字は左の列から順に読む（標準）</span>
                 </div>
                 <div class="field key-row hidden" id="enc-numeric-row">
                   <label class="lbl" for="enc-numeric">鍵数列</label>
@@ -237,6 +243,11 @@
                   <input id="dec-keyword" type="text" value="" placeholder="例：ZEBRAS / BALLOON" title="暗号化時に使用したキーワードと完全に同じものを入力してください。大文字小文字は区別されません。" />
                   <span class="input-hint">※英字（A〜Z）だけ。大文字と小文字は区別しない。同じ文字は左の列から若い番号</span>
                 </div>
+                <div class="field" id="dec-myszkowski-row">
+                  <span class="lbl">同じ文字</span>
+                  <label><input type="checkbox" id="dec-myszkowski" title="キーワードに同じ文字があるとき、その列をまとめて行ごとに左から読みます（Myszkowski式）。"> Myszkowski式（同じ文字の列をまとめて読む）</label>
+                  <span class="input-hint">※外すと、同じ文字は左の列から順に読む（標準）</span>
+                </div>
                 <div class="field key-row hidden" id="dec-numeric-row">
                   <label class="lbl" for="dec-numeric">鍵数列</label>
                   <input id="dec-numeric" type="text" value="" placeholder="1から始まる連続数値を入力 (例: 3 1 4 2 5)" title="暗号化時に使用した数列と完全に同じものを入力してください。順序と数値が正確でないと復号できません。" />
@@ -321,6 +332,85 @@
       </div>
     </section>
 
+
+    <!-- 二重転置タブ -->
+    <section id="tab-double" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-double">
+      <div class="card">
+        <div class="section">
+          <div class="section-header">
+            <h2>1. 文の入力</h2>
+            <button id="dbl-sample" class="sample-btn" type="button" title="Wikipedia の例（WE ARE DISCOVERED FLEE AT ONCE、鍵 ZEBRAS と STRIPE）を入れます。">Wikipediaの例</button>
+          </div>
+          <div class="field" role="radiogroup" aria-labelledby="dbl-mode-label">
+            <span class="lbl" id="dbl-mode-label">操作</span>
+            <label><input type="radio" name="dbl-mode" value="encrypt" checked> 暗号化</label>
+            <label><input type="radio" name="dbl-mode" value="decrypt"> 復号</label>
+          </div>
+          <label class="visually-hidden" for="dbl-input">暗号化する平文、または復号する暗号文</label>
+          <textarea id="dbl-input" class="mono" rows="4" placeholder="暗号化する平文、または復号する暗号文"></textarea>
+        </div>
+
+        <div class="section">
+          <h2>2. 鍵の設定</h2>
+          <p class="section-note">1段目の鍵で縦列転置し、その暗号文を2段目の鍵でもう一度縦列転置します。キーワード（英字）か数列（例: 3 1 4 2）を入れます。埋字は使いません（不完全モード）。</p>
+          <div class="settings-grid">
+            <div class="setting-group">
+              <h3>鍵</h3>
+              <div class="field">
+                <label class="lbl" for="dbl-key1">1段目の鍵</label>
+                <input id="dbl-key1" type="text" placeholder="例：ZEBRAS" />
+              </div>
+              <div class="field">
+                <label class="lbl" for="dbl-key2">2段目の鍵</label>
+                <input id="dbl-key2" type="text" placeholder="例：STRIPE" />
+              </div>
+            </div>
+            <div class="setting-group">
+              <h3>整形</h3>
+              <div class="field options-field" id="dbl-enc-options">
+                <span class="lbl">平文</span>
+                <div class="checkbox-group">
+                  <label><input type="checkbox" id="dbl-stripspace" checked> スペース削除</label>
+                  <label><input type="checkbox" id="dbl-stripsymbol" checked> 記号削除</label>
+                  <label><input type="checkbox" id="dbl-uppercase" checked> 英大文字化</label>
+                </div>
+              </div>
+              <div class="field hidden" id="dbl-dec-options">
+                <span class="lbl">暗号文</span>
+                <label><input type="checkbox" id="dbl-ignore-space" checked> 暗号文の空白・改行を無視</label>
+              </div>
+            </div>
+          </div>
+          <div class="buttons">
+            <button id="dbl-run" class="primary" type="button">実行</button>
+            <button id="dbl-clear" class="ghost" type="button">クリア</button>
+          </div>
+          <div id="dbl-error" class="error hidden" aria-live="polite"></div>
+          <p id="dbl-stale" class="stale-note hidden" role="status"></p>
+        </div>
+
+        <div class="section hidden" id="dbl-result-section">
+          <h2>3. 2回の転置</h2>
+          <h3 id="dbl-step1-title">1段目</h3>
+          <div class="key-visual"><div><span id="dbl-step1-label"></span>：<span id="dbl-order1"></span></div></div>
+          <div id="dbl-grid1" class="gridwrap"></div>
+          <p class="mono dbl-text"><span id="dbl-mid-label"></span>：<span id="dbl-mid"></span></p>
+          <h3 id="dbl-step2-title">2段目</h3>
+          <div class="key-visual"><div><span id="dbl-step2-label"></span>：<span id="dbl-order2"></span></div></div>
+          <div id="dbl-grid2" class="gridwrap"></div>
+          <div class="subsection">
+            <div class="subsection-header">
+              <h3 id="dbl-output-title">結果</h3>
+              <button id="dbl-copy" class="copy-btn" type="button" title="コピー">コピー</button>
+            </div>
+            <div class="output-wrapper">
+              <label class="visually-hidden" for="dbl-output">結果</label>
+              <textarea id="dbl-output" class="mono" rows="3" readonly></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- 座学タブ -->
     <section id="tab-study" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-study">

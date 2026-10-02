@@ -3,6 +3,7 @@
 import { initTabs } from './tabs.js';
 import { initEncryption } from './encryption.js';
 import { initDecryption } from './decryption.js';
+import { initDouble } from './double.js';
 import { initTheme } from './theme.js';
 import { initHelp } from './help.js';
 
@@ -28,7 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
     ['help', initHelp],
     ['tabs', initTabs],
     ['encryption', initEncryption],
-    ['decryption', initDecryption]
+    ['decryption', initDecryption],
+    ['double', initDouble]
   ];
   for (const [name, init] of steps) {
     try {

@@ -77,7 +77,8 @@ test('二重転置（Wikipedia の ZEBRAS→STRIPE の例）', () => {
 test('鍵の欄の値を見分ける・読み出し順から鍵を作る', () => {
   assert.equal(parseAnyKey('ZEBRAS').type, 'keyword');
   assert.equal(parseAnyKey('3 1 4 2').type, 'numeric');
-  assert.equal(parseAnyKey('A1').error.key, 'key.numericChars');
+  assert.equal(parseAnyKey('A1').error.key, 'key.mixed');
+  assert.equal(parseAnyKey('3 1 X').error.key, 'key.mixed');
   const k = keyFromOrder([4, 2, 1, 3, 5, 0]);
   assert.deepEqual(k.order, parseKeyword('ZEBRAS').order);
   assert.deepEqual(displayRank(k), [6, 3, 2, 4, 1, 5]);

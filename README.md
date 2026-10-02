@@ -482,6 +482,7 @@ columnar-cipherlab/
 ├── js/                     # JavaScriptモジュール
 │   ├── columnar-core.js    # 整形・鍵の解析・暗号化・復号（DOMに依存しない）
 │   ├── decryption.js       # 復号タブの画面処理
+│   ├── double.js           # 二重転置タブの画面処理
 │   ├── encryption.js       # 暗号化タブの画面処理
 │   ├── file-check.js       # file://で開いたときの案内
 │   ├── help.js             # ヘルプのダイアログ

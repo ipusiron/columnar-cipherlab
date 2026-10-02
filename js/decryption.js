@@ -15,6 +15,8 @@ export function initDecryption() {
   const decCipher = $('dec-cipher');
   const decKeyword = $('dec-keyword');
   const decNumeric = $('dec-numeric');
+  const decMyszkowski = $('dec-myszkowski');
+  const decMyszRow = $('dec-myszkowski-row');
   const decUseKey = $('dec-use-key');
   const decKeySettings = $('dec-key-settings');
   const decNoKeySettings = $('dec-no-key-settings');
@@ -59,6 +61,7 @@ export function initDecryption() {
       keyType: keyType(),
       keyword: decKeyword.value,
       numeric: decNumeric.value,
+      myszkowski: decMyszkowski.checked,
       columns: decColNum.value,
       complete: decComplete.checked,
       padChar: decPadChar.value,
@@ -113,6 +116,7 @@ export function initDecryption() {
     decAutoStrip.closest('.field').classList.toggle('hidden', !decComplete.checked);
     const isKeyword = keyType() === 'keyword';
     decKeywordRow.classList.toggle('hidden', !isKeyword);
+    decMyszRow.classList.toggle('hidden', !isKeyword);
     decNumericRow.classList.toggle('hidden', isKeyword);
     updateDecryptButtonState();
   }
@@ -121,7 +125,7 @@ export function initDecryption() {
   updateSyncButtonState();
 
   const onChanged = () => { refreshForm(); markStale(); };
-  [decUseKey, decComplete, decAutoStrip, decIgnoreSpace, ...decKeyTypeInputs].forEach(i => i.addEventListener('change', onChanged));
+  [decUseKey, decComplete, decAutoStrip, decIgnoreSpace, decMyszkowski, ...decKeyTypeInputs].forEach(i => i.addEventListener('change', onChanged));
   [decCipher, decKeyword, decNumeric, decPadChar, decColNum].forEach(i => i.addEventListener('input', onChanged));
 
   // 鍵・埋字・列数の欄で Enter、暗号文欄で Ctrl+Enter を押したら実行する
@@ -204,6 +208,7 @@ export function initDecryption() {
     if (state.useKey && state.keyType) {
       document.querySelector(`input[name="dec-keytype"][value="${state.keyType === 'numeric' ? 'numeric' : 'keyword'}"]`).checked = true;
       decKeyword.value = state.keyType === 'keyword' ? state.keyword || '' : '';
+      decMyszkowski.checked = Boolean(state.myszkowski);
       decNumeric.value = state.keyType === 'numeric' ? state.numeric || '' : '';
     } else if (!state.useKey) {
       decColNum.value = state.colNum || 5;
