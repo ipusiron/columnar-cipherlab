@@ -13,6 +13,8 @@ import { t } from './messages.js';
 
 const FREQUENCY_ANALYZER = 'https://ipusiron.github.io/frequency-analyzer/';
 const BENCH_MAX = 20;
+// 候補の表に出す復号文の文字数（それより長い分は「…」）
+const PREVIEW = 40;
 // 例題: 『二都物語』の書き出しを、鍵 PARIS で不完全モードの縦列転置にしたもの
 const SAMPLE_PLAIN = 'ITWASTHEBESTOFTIMESITWASTHEWORSTOFTIMESITWASTHEAGEOFWISDOMITWASTHEAGEOFFOOLISHNESS';
 const SAMPLE_ORDER = [1, 3, 4, 2, 0];
@@ -208,7 +210,7 @@ export function initLab() {
   function renderResults() {
     resultsBody.replaceChildren(...candidates.map((cand, i) => {
       const keyText = displayRank(cand.key).join(' ');
-      const preview = Array.from(cand.text).slice(0, 60).join('') + (Array.from(cand.text).length > 60 ? '…' : '');
+      const preview = Array.from(cand.text).slice(0, PREVIEW).join('') + (Array.from(cand.text).length > PREVIEW ? '…' : '');
       const benchBtn = el('button', { className: 'ghost small-btn', attrs: { type: 'button', 'data-i': String(i) } });
       const decBtn = el('button', { className: 'ghost small-btn', attrs: { type: 'button', 'data-i': String(i) } });
       setText(benchBtn, 'lab.toBench');

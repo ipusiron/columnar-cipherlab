@@ -495,7 +495,13 @@
 }
 
 .result-table .actions {
-  white-space: nowrap;
+  min-width: 10em;
+}
+
+.result-table .actions .small-btn {
+  display: block;
+  width: 100%;
+  margin: 2px 0;
 }
 
 .small-btn {

@@ -165,10 +165,24 @@ https://ipusiron.github.io/columnar-cipherlab/?malicious=<script>document.locati
 ```
 
 **対策効果**:
-1. 本ツールが読むURLパラメーターは`debug`だけで、値が`1`かどうかを比べるだけ。画面には出さない
-2. パラメーターの機能を足すときも、値は`textContent`で入れる
+1. 本ツールが読むURLパラメーターは`debug`と`lang`だけ。`debug`は値が`1`かどうか、`lang`は`ja`か`en`かを比べるだけで、画面には出さない
+2. 共有リンク（「#」以降）は`js/share.js`の`parseShareHash`で検証してから使う（次のシナリオ4）
 
-### 🎯 シナリオ4: ソーシャルエンジニアリング
+### 🎯 シナリオ4: 細工した共有リンク
+
+**攻撃手法**:
+```
+https://ipusiron.github.io/columnar-cipherlab/#tab=dec&c=<img src=x onerror=alert(1)>&m=complete&t=keyword&k=KEY&p=X
+```
+
+**対策効果**:
+1. `tab`は`lab`か`dec`、`m`は`complete`か`incomplete`、`t`は`keyword`・`numeric`・`none`のどれかでなければ読み込まない
+2. 鍵は暗号化・復号と同じ解析（英字だけ、1からnまでの数など）を通ったものだけを使う。埋字は英字1文字だけ
+3. 暗号文は1万文字までで、入力欄の`value`に入れるだけ。画面に出すときは`textContent`なので、タグとして解釈されない
+4. 読み込めないリンクは「共有リンクの内容を読み込めませんでした」と表示し、何も入れない
+5. 共有リンクに平文の欄はない。「問題として共有」は鍵も含めない
+
+### 🎯 シナリオ5: ソーシャルエンジニアリング
 
 **攻撃手法**:
 ```
@@ -185,13 +199,25 @@ https://ipusiron.github.io/columnar-cipherlab/?malicious=<script>document.locati
 
 ## 🔍 実装の技術的詳細
 
+### 🧵 解読ラボの Web Worker
+
+総当たりは`js/solver-worker.js`（同じオリジンのモジュール形式のWorker）で動かします。CSPに`worker-src`は書いておらず、`script-src 'self'`が当てはまるので、同じオリジンのファイル以外からWorkerは作れません。Workerに渡すのは暗号文と設定だけで、Workerは外部と通信しません。総当たりの対象は1,000文字まで、鍵長は2〜8までです。
+
+### 🔗 Day009 へのリンク
+
+解読ラボの「Frequency Analyzer（Day009）で文字の頻度を詳しく見る」は、暗号文を`?text=`に入れて`https://ipusiron.github.io/frequency-analyzer/`を開くリンクです。URLのクエリはGitHub Pagesのサーバーに届くので、暗号文がサーバーのログに残りうることを、リンクの文言に「暗号文をURLで渡す」と書いています。押したときだけ渡し、自動では開きません。
+
+### 🌐 日英の切り替え
+
+画面の文言は`js/messages.js`の辞書から`textContent`と`setAttribute`で入れます（`innerHTML`は使わない）。座学とヘルプの本文は、日本語版と英語版をHTMLに並べておき、`hidden`属性で切り替えます。
+
 ### 🧾 ログ
 
 デバッグのログは、URLに`?debug=1`を付けたときだけコンソールに出ます。出すのは初期化の進み具合だけで、入力した文・鍵・暗号文は出しません。
 
 ### 💾 ブラウザーの保存領域
 
-テーマの選択（`light` / `dark`）だけを`localStorage`に保存します。プライベートブラウズなどで保存領域が使えない環境でも、例外を受け止めて動きます（その場合、テーマはそのページを開いている間だけ切り替わる）。
+テーマの選択（`light` / `dark`）と言語の選択（`ja` / `en`）だけを`localStorage`に保存します。プライベートブラウズなどで保存領域が使えない環境でも、例外を受け止めて動きます（その場合、テーマと言語はそのページを開いている間だけ切り替わる）。
 
 ### 🗂️ file:// で開いたとき
 
@@ -209,12 +235,13 @@ ES Modulesは`file://`から読み込めないため、HTMLファイルを直接
 
 ### 🧪 自動テスト
 
-`npm test`で、次を検査します（`test/html.test.js`）。
+`npm test`で、次を検査します。
 
-- CSPのmetaタグがあり、`'unsafe-inline'`と`'unsafe-eval'`を含まない。`frame-ancestors`を書いていない
-- `src`のない`<script>`、`<style>`要素、`style`属性、イベント属性がない
-- `target="_blank"`のリンクに`rel="noopener noreferrer"`がある
-- スクリプトが参照するidが`index.html`にある
+- CSPのmetaタグがあり、`'unsafe-inline'`と`'unsafe-eval'`を含まない。`frame-ancestors`を書いていない（`test/html.test.js`）
+- `src`のない`<script>`、`<style>`要素、`style`属性、イベント属性がない（同）
+- `target="_blank"`のリンクに`rel="noopener noreferrer"`がある（同）
+- スクリプトが参照するidが`index.html`にある（同）
+- 共有リンクに平文の欄がない。形式の違う値や範囲の外の値を読み込まない（`test/share.test.js`）
 
 ### 🔍 ブラウザーでの確認手順
 
@@ -256,7 +283,8 @@ document.body.appendChild(img);
 
 1. XSS対策：文字列は`textContent`で入れ、HTMLとして解釈しない
 2. CSP設定：スクリプト・スタイル・画像・通信を同じオリジンに限り、インラインを許さない
-3. 入力制限：入力1万文字・鍵64列まで
-4. 自動テスト：CSPとインラインの有無を`npm test`で毎回検査する
+3. 入力制限：入力1万文字・鍵64列まで、総当たりは1,000文字まで
+4. 共有リンク：平文を含めず、「#」以降に書き、読み込むときに検証する
+5. 自動テスト：CSPとインラインの有無、共有リンクの検証を`npm test`で毎回検査する
 
 これらは、XSSや外部リソースの注入といった想定した脅威の多くを緩和します。すべての攻撃を防ぐものではありません。
