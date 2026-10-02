@@ -108,7 +108,7 @@ export function initEncryption() {
 
   function updateEncryptButtonState() {
     const v = validate(readForm());
-    showMessages(encError, v.errors.filter(e => !isQuiet(e)).map(tr));
+    showMessages(encError, [...v.errors.filter(e => !isQuiet(e)), ...v.warnings].map(tr));
     encRun.disabled = !v.ok;
     return v;
   }
@@ -334,7 +334,7 @@ export function initEncryption() {
       showMessages(encError, [tr(result.error)]);
       return;
     }
-    showMessages(encError, []);
+    showMessages(encError, v.warnings.map(tr));
     const notices = [];
     if (norm.truncated) notices.push(t('warn.truncated', { max: MAX_INPUT_LENGTH, length: norm.inputLength }));
     if (result.endsWithPad) notices.push(t('warn.endsWithPad', { pad: padChar }));
