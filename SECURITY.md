@@ -205,7 +205,7 @@ https://ipusiron.github.io/columnar-cipherlab/#tab=dec&c=<img src=x onerror=aler
 
 ### 🔗 Day009 へのリンク
 
-解読ラボの「Frequency Analyzer（Day009）で文字の頻度を詳しく見る」は、暗号文を`?text=`に入れて`https://ipusiron.github.io/frequency-analyzer/`を開くリンクです。URLのクエリはGitHub Pagesのサーバーに届くので、暗号文がサーバーのログに残りうることを、リンクの文言に「暗号文をURLで渡す」と書いています。押したときだけ渡し、自動では開きません。
+解読ラボの「Frequency Analyzer（Day009）で文字の頻度を詳しく見る」は、暗号文を`#text=`に入れて`https://ipusiron.github.io/frequency-analyzer/`を開くリンクです。URLの`#`より後ろはサーバーへ送られないので、暗号文はGitHub Pagesのサーバーのログに残りません。Day009は`#text=`を読み込んだあとURLから消しますが、開いたときのURLはブラウザーの閲覧履歴に残ることがあるので、リンクの文言に「暗号文をURLで渡す」と書いています。押したときだけ渡し、自動では開きません。
 
 ### 🌐 日英の切り替え
 

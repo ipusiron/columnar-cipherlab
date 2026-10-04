@@ -491,7 +491,7 @@ This tool is a static page published on GitHub Pages and does not send your text
 - Debug logs are printed only with `?debug=1` in the URL, and never contain your text
 - Input is truncated at 10,000 characters, and the screen says so
 - Share links never contain the plaintext. The values are written after "#" in the URL, so they are not sent to the server when the link is opened. When loading, the length, mode and key are validated before use
-- The "Frequency Analyzer (Day009)" link in the cryptanalysis lab passes the ciphertext in the `?text=` part of the URL (it reaches the GitHub Pages server), only when you click it
+- The "Frequency Analyzer (Day009)" link in the cryptanalysis lab passes the ciphertext as `#text=` in the URL (the part after `#` is not sent to the server), only when you click it
 - Brute force runs in a Web Worker from the same origin (`js/solver-worker.js`)
 
 Attack scenarios and how to check the measures are described in [SECURITY.md](SECURITY.md) (in Japanese).
