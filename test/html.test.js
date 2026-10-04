@@ -70,3 +70,9 @@ test('ビューポートと file:// の案内', () => {
   assert.match(read('js/file-check.js'), /getAttribute\('data-ready'\) === 'true'/);
   assert.match(read('js/main.js'), /dataset\.ready = 'true'/);
 });
+
+test('解読ラボから Frequency Analyzer（Day009）へは「#」より後ろで渡す（サーバーへ送られない）', () => {
+  const lab = read('js/lab.js');
+  assert.ok(lab.includes('href: `${FREQUENCY_ANALYZER}#text=${encodeURIComponent(c)}`'));
+  assert.ok(!lab.includes('?text='));
+});

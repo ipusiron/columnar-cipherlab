@@ -74,7 +74,8 @@ export function initLab() {
         ? { key: 'lab.verdict.short', params: { min: MIN_LETTERS, letters: check.letters } }
         : { key: `lab.verdict.${check.verdict}`, params: { chi: check.chi, letters: check.letters } }
     ];
-    const link = el('a', { attrs: { href: `${FREQUENCY_ANALYZER}?text=${encodeURIComponent(c)}`, target: '_blank', rel: 'noopener noreferrer' } });
+    // 「#」より後ろで渡す（サーバーへ送られず、URLの長さの上限もない。Day009 は #text= を先に読む）
+    const link = el('a', { attrs: { href: `${FREQUENCY_ANALYZER}#text=${encodeURIComponent(c)}`, target: '_blank', rel: 'noopener noreferrer' } });
     setText(link, 'lab.day009');
     const items = lines.map(m => {
       const li = el('li');
