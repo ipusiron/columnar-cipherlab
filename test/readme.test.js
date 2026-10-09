@@ -196,3 +196,22 @@ test('README のディレクトリー構造', () => {
   const hashes = new Set(block.slice(1).map(l => l.indexOf('#')));
   assert.equal(hashes.size, 1, '# の桁がそろっていない');
 });
+
+test('ユースケースの「このツールならではの使い方」の例も中核ロジックの結果と同じ（日英）', () => {
+  const team = encrypt('ABCDEFGHIJKL', parseKeyword('TEAM')).cipher;
+  assert.equal(team, 'CGKBFJDHLAEI');
+  const groups = team.match(/.{3}/g);
+  assert.deepEqual(groups, ['CGK', 'BFJ', 'DHL', 'AEI']);
+  assert.ok(readme.includes(`並びは${team}になる`) && readme.includes(`（${groups.join('・')}）`));
+  assert.ok(readmeEn.includes(`the order is ${team}.`) && readmeEn.includes(`(${groups.join(', ')})`));
+  const plain = displayRank(parseKeyword('BANANA'));
+  const mysz = displayRank(parseKeyword('BANANA', { myszkowski: true }));
+  assert.deepEqual([plain.join(','), mysz.join(',')], ['4,1,5,2,6,3', '2,1,3,1,3,1']);
+  assert.ok(readme.includes(`順位は${plain.join('・')}になる`) && readme.includes(`（${mysz.join('・')}）`));
+  assert.ok(readmeEn.includes(`are ${plain.join(', ')}.`) && readmeEn.includes(`(${mysz.join(', ')})`));
+  const lines = ['あめふり', 'りすのこ', 'がっこう', 'とまとだ'];
+  const tate = encrypt(lines.join(''), parseNumericKey('1 2 3 4')).cipher;
+  assert.equal(tate, 'ありがとめすっまふのことりこうだ');
+  assert.equal(tate.slice(0, 4), lines.map(l => l[0]).join(''));
+  assert.ok(readme.includes(lines.map(l => `「${l}」`).join('') + 'を数列1 2 3 4で暗号化すると、暗号文は' + tate + 'になり'));
+});
