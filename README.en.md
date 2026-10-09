@@ -286,6 +286,12 @@ Add a sample preset by editing `data/presets.json`; no code change is needed. Th
 
 ## 🎯 Use cases
 
+### Ways of using this tool in particular
+
+- Reordering by a procedure you can publish (seating, presentation order, team building): replace 12 people with the letters A to L and encrypt with the keyword TEAM, and the order is CGKBFJDHLAEI. The grid has 4 columns, so cutting the ciphertext into groups of three gives the four teams column by column (CGK, BFJ, DHL, AEI). If the keyword is published before reordering, anyone can reproduce the same order (since the keyword could be chosen again after seeing the result, always publish it before reordering; this is not the same as a fair draw with random numbers)
+- Checking a stable sort with a key that repeats letters (programming classes): the column ranks for the keyword BANANA are 4, 1, 5, 2, 6, 3. The three As are 1, 2, 3 from the left and the two Ns are 5, 6, so of two equal letters the one on the left comes first. It is a concrete example of a sort that keeps the original order of equal values (a stable sort). Switch to the Myszkowski variant and columns with the same letter share a rank (2, 1, 3, 1, 3, 1)
+- Making and finding a vertical message (wordplay): encrypt four lines of four Japanese characters each with the number sequence 1 2 3 4, and the first character of each line (the vertical reading, tateyomi) lines up at the start of the ciphertext. Since columns are read out in order, a text that may hide a vertical message can also be read column by column by setting the number of columns to the line length (if the lines differ in length, the columns shift)
+
 ### Learning security
 
 - In an introductory cryptography course, encrypt the same plaintext with a substitution cipher (such as [Vigenere Cipher Tool](https://ipusiron.github.io/vigenere-cipher-tool/)) and with this tool, then compare the letter frequencies in [Frequency Analyzer](https://ipusiron.github.io/frequency-analyzer/). With transposition the frequencies stay the same as in the plaintext, which shows that reordering alone does not hide which letters are used
